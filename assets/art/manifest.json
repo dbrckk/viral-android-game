@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "name": "Empire Tycoon",
+    "subtitle": "Idle Conquest",
+    "platform": "Android"
+  },
+  "artDirection": {
+    "document": "docs/art/DIRECTION_ART.md",
+    "perspective": "isometric-3-4",
+    "masterResolution": "2048x2048",
+    "delivery": "png-rgba-transparent",
+    "renderProfiles": ["full", "reduced_motion", "power_save"]
+  },
+  "generatedReferences": [
+    {
+      "name": "Infographie néon Empire Tycoon complète.png",
+      "role": "global-art-direction-and-progression",
+      "status": "reference"
+    },
+    {
+      "name": "image-gen-1.png",
+      "role": "business-group-01-sprites-and-animation-reference",
+      "status": "reference"
+    },
+    {
+      "name": "Présentation AAA des business de jeu idle.png",
+      "role": "business-ui-integration-reference",
+      "status": "reference"
+    },
+    {
+      "name": "Infographie futuriste d’un empire tycoon мобильe.png",
+      "role": "global-ui-onboarding-store-reference",
+      "status": "reference"
+    },
+    {
+      "name": "image-gen-1(1).png",
+      "role": "icons-performance-and-layering-reference",
+      "status": "reference"
+    }
+  ],
+  "businessGroups": [
+    {
+      "id": "group_01",
+      "assets": [
+        {"id": "street_stand", "accent": "green-earth-warm", "tiers": ["base", "lv25", "lv100", "lv250", "lv500", "master"]},
+        {"id": "corner_shop", "accent": "blue-cyan-urban", "tiers": ["base", "lv25", "lv100", "lv250", "lv500", "master"]},
+        {"id": "workshop", "accent": "orange-industrial", "tiers": ["base", "lv25", "lv100", "lv250", "lv500", "master"]},
+        {"id": "factory", "accent": "violet-magenta-industrial", "tiers": ["base", "lv25", "lv100", "lv250", "lv500", "master"]}
+      ]
+    }
+  ],
+  "layerContract": ["base_structure", "details", "lights_emissive", "effects_particles"],
+  "requiredStates": ["default", "unlock", "milestone"],
+  "validation": {
+    "requireTransparentBackground": true,
+    "requireConsistentIsometricPerspective": true,
+    "requireMobileReadability": true,
+    "requireReducedMotionVariantForMotionAssets": true,
+    "requirePowerSaveVariantForParticleAssets": true
+  }
+}
