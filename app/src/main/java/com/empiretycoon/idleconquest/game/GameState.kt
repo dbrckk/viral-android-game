@@ -41,6 +41,20 @@ class GameState {
         cash += totalIncomePerSecond * deltaSeconds
     }
 
+    fun addCash(amount: Double) {
+        if (amount > 0.0 && amount.isFinite()) cash += amount
+    }
+
+    fun restoreEconomy(cash: Double, gems: Int, levels: Map<String, Int>) {
+        this.cash = cash.coerceAtLeast(0.0)
+        this.gems = gems.coerceAtLeast(0)
+
+        mutableBusinesses.replaceAll { business ->
+            val restoredLevel = levels[business.id]?.coerceAtLeast(1) ?: business.level
+            business.copy(level = restoredLevel)
+        }
+    }
+
     fun canUpgrade(index: Int): Boolean {
         val business = mutableBusinesses.getOrNull(index) ?: return false
         return cash >= business.nextUpgradeCost
