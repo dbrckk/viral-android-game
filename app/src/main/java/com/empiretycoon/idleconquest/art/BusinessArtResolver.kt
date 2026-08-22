@@ -8,7 +8,7 @@ data class BusinessArtSelection(
     val tier: String,
     val profile: String,
     val accent: String,
-    val assetPath: String?
+    val layerPaths: List<String>
 )
 
 class BusinessArtResolver(private val context: Context) {
@@ -21,26 +21,22 @@ class BusinessArtResolver(private val context: Context) {
     fun resolve(
         businessId: String,
         tier: String = "base",
+        state: String = "default",
         profile: String = "full"
     ): BusinessArtSelection {
         val businesses = runtimeIndex.getJSONObject("businesses")
         val business = businesses.getJSONObject(businessId)
         val accent = business.optString("accent", "neutral")
+        val layers = runtimeIndex.getJSONArray("layers")
+        val profiles = profileFallbacks(profile)
+        val states = if (state == "default") listOf("default") else listOf(state, "default")
 
-        val preferredPath = "art/business/group_01/$businessId/$tier/default/full.png"
-        val reducedPath = "art/business/group_01/$businessId/$tier/default/reduced_motion.png"
-        val powerSavePath = "art/business/group_01/$businessId/$tier/default/power_save.png"
-
-        val requested = when (profile) {
-            "reduced_motion" -> reducedPath
-            "power_save" -> powerSavePath
-            else -> preferredPath
-        }
-
-        val resolved = when {
-            assetExists(requested) -> requested
-            profile != "full" && assetExists(preferredPath) -> preferredPath
-            else -> null
+        val paths = buildList {
+            for (layerIndex in 0 until layers.length()) {
+                val layer = layers.getString(layerIndex)
+                val path = firstExistingPath(businessId, tier, states, layer, profiles)
+                if (path != null) add(path)
+            }
         }
 
         return BusinessArtSelection(
@@ -48,8 +44,31 @@ class BusinessArtResolver(private val context: Context) {
             tier = tier,
             profile = profile,
             accent = accent,
-            assetPath = resolved
+            layerPaths = paths
         )
+    }
+
+    private fun profileFallbacks(profile: String): List<String> = when (profile) {
+        "reduced_motion" -> listOf("reduced_motion", "full")
+        "power_save" -> listOf("power_save", "full")
+        else -> listOf("full")
+    }
+
+    private fun firstExistingPath(
+        businessId: String,
+        tier: String,
+        states: List<String>,
+        layer: String,
+        profiles: List<String>
+    ): String? {
+        for (state in states) {
+            for (profile in profiles) {
+                val filename = "${businessId}__${tier}__${state}__${layer}__${profile}.png"
+                val path = "art/business/group_01/$filename"
+                if (assetExists(path)) return path
+            }
+        }
+        return null
     }
 
     private fun assetExists(path: String): Boolean = try {
