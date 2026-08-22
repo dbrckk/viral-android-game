@@ -29,3 +29,4 @@ jobs:
       - run: python tools/art/validate_group01.py
       - run: python tools/art/validate_vector_sprites.py
       - run: python tools/art/validate_managers.py
+      - run: python tools/art/validate_permanent_upgrades.py
