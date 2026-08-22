@@ -29,5 +29,8 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Validate art manifest and direction contract
+      - name: Validate global art manifest and direction contract
         run: python tools/art/validate_manifest.py
+
+      - name: Validate Business Group 01 production contract
+        run: python tools/art/validate_group01.py
