@@ -12,12 +12,15 @@ import kotlin.math.sin
 
 class ProceduralBusinessSpriteRenderer(private val context: Context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val streetRaster = StreetStandRasterRenderer(context)
     private val config: JSONObject by lazy {
         context.assets.open("art/business/group_01/vector-sprites.json")
             .bufferedReader().use { JSONObject(it.readText()) }
     }
 
     fun draw(canvas: Canvas, rect: RectF, businessId: String, tier: String, state: String) {
+        if (businessId == "street_stand" && streetRaster.draw(canvas, rect, tier)) return
+
         val business = config.getJSONObject("businesses").getJSONObject(businessId)
         val palette = business.getJSONObject("palette")
         val spec = business.getJSONObject("tiers").getJSONObject(tier)
