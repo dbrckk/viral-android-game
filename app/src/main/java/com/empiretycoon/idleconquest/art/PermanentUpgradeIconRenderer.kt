@@ -1,23 +1,44 @@
 package com.empiretycoon.idleconquest.art
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Path
+import android.graphics.Rect
 import android.graphics.RectF
-import org.json.JSONObject
 
-class PermanentUpgradeIconRenderer(private val context:Context){
- private val p=Paint(Paint.ANTI_ALIAS_FLAG)
- private val root by lazy{JSONObject(context.assets.open("art/upgrades/permanent-upgrades.json").bufferedReader().use{it.readText()})}
- private fun visual(id:String):JSONObject?{val a=root.getJSONArray("upgrades");for(i in 0 until a.length()){val o=a.getJSONObject(i);if(o.getString("id")==id)return o};return null}
- fun draw(c:Canvas,r:RectF,id:String,state:String){
-  val v=visual(id)?:return;val primary=Color.parseColor(v.getString("primary"));val neon=Color.parseColor(v.getString("neon"));val cx=r.centerX();val cy=r.centerY();val rad=minOf(r.width(),r.height())*.46f
-  val path=Path();for(i in 0..5){val a=Math.toRadians((60*i-30).toDouble());val x=cx+(kotlin.math.cos(a)*rad).toFloat();val y=cy+(kotlin.math.sin(a)*rad).toFloat();if(i==0)path.moveTo(x,y)else path.lineTo(x,y)};path.close()
-  p.style=Paint.Style.FILL;p.color=Color.rgb(12,17,36);c.drawPath(path,p);p.color=primary;p.alpha=if(state=="locked")45 else 90;c.drawPath(path,p);p.alpha=255
-  p.style=Paint.Style.STROKE;p.strokeWidth=if(state=="purchased")6f else 3f;p.color=if(state=="purchased")Color.rgb(245,201,92)else neon;c.drawPath(path,p)
-  p.style=Paint.Style.FILL;p.textAlign=Paint.Align.CENTER;p.isFakeBoldText=true;p.textSize=r.width()*.19f;p.color=if(state=="locked")Color.GRAY else Color.WHITE;c.drawText(v.getString("glyph"),cx,cy+p.textSize*.34f,p);p.textAlign=Paint.Align.LEFT;p.isFakeBoldText=false
-  if(state=="locked"){p.color=Color.argb(150,5,7,16);c.drawPath(path,p);p.color=Color.LTGRAY;p.textAlign=Paint.Align.CENTER;p.textSize=r.width()*.14f;p.isFakeBoldText=true;c.drawText("LOCK",cx,cy+p.textSize*.32f,p);p.textAlign=Paint.Align.LEFT;p.isFakeBoldText=false}
- }
+class PermanentUpgradeIconRenderer(private val context: Context) {
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+    private val ids = listOf(
+        "street_solar_grill",
+        "street_bulk_supply",
+        "shop_holo_signage",
+        "shop_auto_stock",
+        "workshop_plasma_tools",
+        "workshop_modular_lines",
+        "factory_quantum_core",
+        "factory_predictive_ai"
+    )
+    private val states = listOf("locked", "available", "purchased")
+    private val atlas: Bitmap by lazy {
+        context.assets.open("art/upgrades/raster/permanent_upgrades_atlas.webp").use {
+            BitmapFactory.decodeStream(it) ?: error("Unable to decode permanent upgrade sprite atlas")
+        }
+    }
+
+    fun draw(canvas: Canvas, destination: RectF, id: String, state: String) {
+        val column = ids.indexOf(id)
+        if (column < 0) return
+        val row = states.indexOf(state).takeIf { it >= 0 } ?: 0
+        val cellWidth = atlas.width / ids.size
+        val cellHeight = atlas.height / states.size
+        val source = Rect(
+            column * cellWidth,
+            row * cellHeight,
+            (column + 1) * cellWidth,
+            (row + 1) * cellHeight
+        )
+        canvas.drawBitmap(atlas, source, destination, paint)
+    }
 }
