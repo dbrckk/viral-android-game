@@ -57,11 +57,11 @@ class GameState {
     }
 
     fun tierFor(level: Int): String = when {
-        level >= 500 -> "master"
-        level >= 250 -> "lv500"
-        level >= 100 -> "lv250"
-        level >= 25 -> "lv100"
-        level >= 10 -> "lv25"
+        level >= 1_000 -> "master"
+        level >= 500 -> "lv500"
+        level >= 250 -> "lv250"
+        level >= 100 -> "lv100"
+        level >= 25 -> "lv25"
         else -> "base"
     }
 }
