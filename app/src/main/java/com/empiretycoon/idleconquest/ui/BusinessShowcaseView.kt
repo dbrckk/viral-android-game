@@ -9,18 +9,28 @@ import android.graphics.RectF
 import android.view.MotionEvent
 import android.view.View
 import com.empiretycoon.idleconquest.art.BusinessArtResolver
+import com.empiretycoon.idleconquest.game.GameSaveStore
 import com.empiretycoon.idleconquest.game.GameState
 import java.util.Locale
 
 class BusinessShowcaseView(context: Context) : View(context) {
     private val resolver = BusinessArtResolver(context)
-    private val gameState = GameState()
+    private val saveStore = GameSaveStore(context)
+    private var gameState: GameState
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val cardRects = mutableListOf<RectF>()
     private val upgradeRects = mutableListOf<RectF>()
     private var lastFrameNanos = 0L
+    private var lastAutosaveNanos = 0L
+    private var offlineBannerText: String? = null
+    private var offlineBannerUntilNanos = 0L
 
     init {
+        val restore = saveStore.restore()
+        gameState = restore.state
+        if (restore.offlineEarnings > 0.0) {
+            offlineBannerText = "WELCOME BACK  +$ ${formatNumber(restore.offlineEarnings)}"
+            offlineBannerUntilNanos = System.nanoTime() + 6_000_000_000L
+        }
         isClickable = true
         keepScreenOn = true
     }
@@ -28,24 +38,28 @@ class BusinessShowcaseView(context: Context) : View(context) {
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         updateEconomy()
+        maybeAutosave()
         canvas.drawColor(Color.rgb(8, 10, 24))
 
         val margin = width * 0.045f
         val hudHeight = height * 0.12f
         drawHud(canvas, RectF(margin, margin, width - margin, margin + hudHeight))
 
-        cardRects.clear()
+        val bannerHeight = if (offlineBannerText != null && System.nanoTime() < offlineBannerUntilNanos) height * 0.055f else 0f
+        if (bannerHeight > 0f) {
+            drawOfflineBanner(canvas, RectF(margin, margin + hudHeight + 8f, width - margin, margin + hudHeight + 8f + bannerHeight))
+        }
+
         upgradeRects.clear()
 
-        val topStart = margin + hudHeight + margin
+        val topStart = margin + hudHeight + margin + bannerHeight
         val availableHeight = height - topStart - margin
         val gap = margin * 0.75f
         val cardHeight = (availableHeight - gap * 3f) / 4f
 
-        gameState.businesses.forEachIndexed { index, business ->
+        gameState.businesses.forEachIndexed { index, _ ->
             val top = topStart + index * (cardHeight + gap)
             val rect = RectF(margin, top, width - margin, top + cardHeight)
-            cardRects += rect
             drawBusinessCard(canvas, rect, index)
         }
 
@@ -59,6 +73,18 @@ class BusinessShowcaseView(context: Context) : View(context) {
             gameState.tick(delta)
         }
         lastFrameNanos = now
+    }
+
+    private fun maybeAutosave() {
+        val now = System.nanoTime()
+        if (lastAutosaveNanos == 0L || now - lastAutosaveNanos >= AUTOSAVE_INTERVAL_NANOS) {
+            saveStore.save(gameState)
+            lastAutosaveNanos = now
+        }
+    }
+
+    fun persistNow() {
+        saveStore.save(gameState)
     }
 
     private fun drawHud(canvas: Canvas, rect: RectF) {
@@ -83,6 +109,19 @@ class BusinessShowcaseView(context: Context) : View(context) {
         paint.textAlign = Paint.Align.RIGHT
         canvas.drawText("◆ ${gameState.gems}", rect.right - 24f, rect.bottom - 22f, paint)
         paint.textAlign = Paint.Align.LEFT
+    }
+
+    private fun drawOfflineBanner(canvas: Canvas, rect: RectF) {
+        paint.style = Paint.Style.FILL
+        paint.color = Color.rgb(34, 74, 63)
+        canvas.drawRoundRect(rect, 20f, 20f, paint)
+        paint.color = Color.rgb(143, 255, 194)
+        paint.textAlign = Paint.Align.CENTER
+        paint.isFakeBoldText = true
+        paint.textSize = width * 0.030f
+        canvas.drawText(offlineBannerText.orEmpty(), rect.centerX(), rect.centerY() + paint.textSize * 0.35f, paint)
+        paint.textAlign = Paint.Align.LEFT
+        paint.isFakeBoldText = false
     }
 
     private fun drawBusinessCard(canvas: Canvas, rect: RectF, index: Int) {
@@ -164,6 +203,7 @@ class BusinessShowcaseView(context: Context) : View(context) {
         if (event.action == MotionEvent.ACTION_UP) {
             val index = upgradeRects.indexOfFirst { it.contains(event.x, event.y) }
             if (index >= 0 && gameState.upgrade(index)) {
+                saveStore.save(gameState)
                 performClick()
                 invalidate()
             }
@@ -201,5 +241,9 @@ class BusinessShowcaseView(context: Context) : View(context) {
         value >= 1_000_000.0 -> String.format(Locale.US, "%.2fM", value / 1_000_000.0)
         value >= 1_000.0 -> String.format(Locale.US, "%.2fK", value / 1_000.0)
         else -> String.format(Locale.US, "%.0f", value)
+    }
+
+    companion object {
+        private const val AUTOSAVE_INTERVAL_NANOS = 10_000_000_000L
     }
 }
