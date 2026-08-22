@@ -28,6 +28,10 @@ android {
     sourceSets["main"].assets.srcDir(layout.buildDirectory.dir("generated/artAssets"))
 }
 
+dependencies {
+    testImplementation("junit:junit:4.13.2")
+}
+
 val syncArtAssets by tasks.registering(Copy::class) {
     from(rootProject.layout.projectDirectory.dir("assets/art"))
     into(layout.buildDirectory.dir("generated/artAssets/art"))
