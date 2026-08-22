@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "atlas_01",
+  "status": "generated_source_ready_for_slicing",
+  "generationId": "b7f69269-3fb3-42a1-8128-ac759a1408c4",
+  "sourceFilename": "a_wide_composite_sprite_sheet_game_asset_sheet_o.png",
+  "direction": "isometric 3/4 dark sci-fi idle tycoon; neon blue/violet/gold; readable mobile silhouettes",
+  "contains": {
+    "businesses": ["street_stand", "corner_shop", "workshop", "factory"],
+    "tiers": ["base", "lv25", "lv100", "lv250", "lv500", "master"],
+    "states": ["default", "unlock", "milestone"],
+    "layers": ["base_structure", "details", "lights_emissive", "effects_particles"],
+    "ui": ["coin", "gem", "crown", "energy", "star", "upgrade", "x1", "x10", "x25", "max"],
+    "resources": ["coins", "cash", "gems", "chest"],
+    "tierBadges": ["t0", "t1", "t2", "t3", "t4", "t5"],
+    "environment": ["palms", "street_lamp", "bench", "cars", "vans", "planters", "crates"]
+  },
+  "integrationNote": "The generated PNG is the authoritative visual source for remaining sprite extraction. Runtime files must follow group_01 naming conventions. Binary upload/slicing is performed when a binary-capable repository path is available; do not replace this source with stylistically divergent assets."
+}
