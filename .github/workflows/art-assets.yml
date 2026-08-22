@@ -34,3 +34,6 @@ jobs:
 
       - name: Validate Business Group 01 production contract
         run: python tools/art/validate_group01.py
+
+      - name: Validate complete vector sprite atlas
+        run: python tools/art/validate_vector_sprites.py
