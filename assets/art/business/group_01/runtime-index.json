@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "groupId": "group_01",
+  "resolver": {
+    "pattern": "<business>__<tier>__<state>__<layer>__<profile>.png",
+    "root": "art/business/group_01",
+    "fallback": {
+      "profiles": {
+        "reduced_motion": ["reduced_motion", "full"],
+        "power_save": ["power_save", "full"],
+        "full": ["full"]
+      },
+      "states": ["requested", "default"],
+      "tiers": "exact-only"
+    }
+  },
+  "businesses": {
+    "street_stand": {
+      "tiers": ["base", "lv25", "lv100", "lv250", "lv500", "master"],
+      "accent": "green-earth-warm"
+    },
+    "corner_shop": {
+      "tiers": ["base", "lv25", "lv100", "lv250", "lv500", "master"],
+      "accent": "blue-cyan-urban"
+    },
+    "workshop": {
+      "tiers": ["base", "lv25", "lv100", "lv250", "lv500", "master"],
+      "accent": "orange-industrial"
+    },
+    "factory": {
+      "tiers": ["base", "lv25", "lv100", "lv250", "lv500", "master"],
+      "accent": "violet-magenta-industrial"
+    }
+  },
+  "layers": ["base_structure", "details", "lights_emissive", "effects_particles"],
+  "states": ["default", "unlock", "milestone"],
+  "profiles": ["full", "reduced_motion", "power_save"]
+}
