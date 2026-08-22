@@ -1,0 +1,15 @@
+{
+  "schemaVersion":1,
+  "direction":"dark sci-fi idle tycoon icons, beveled hex badges, neon edge light, readable at 48dp",
+  "states":["locked","available","purchased"],
+  "upgrades":[
+    {"id":"street_solar_grill","business":"street_stand","icon":"sun_flame","primary":"#F05A28","neon":"#F6C445","glyph":"SUN"},
+    {"id":"street_bulk_supply","business":"street_stand","icon":"crate_down","primary":"#AD6B2C","neon":"#2FD8FF","glyph":"BOX"},
+    {"id":"shop_holo_signage","business":"corner_shop","icon":"holo_sign","primary":"#1E74D8","neon":"#43C7FF","glyph":"HOLO"},
+    {"id":"shop_auto_stock","business":"corner_shop","icon":"box_cycle","primary":"#3159A8","neon":"#9B5CFF","glyph":"SYNC"},
+    {"id":"workshop_plasma_tools","business":"workshop","icon":"plasma_wrench","primary":"#D9771F","neon":"#38C8FF","glyph":"TOOL"},
+    {"id":"workshop_modular_lines","business":"workshop","icon":"conveyor_down","primary":"#9A6024","neon":"#F5A33A","glyph":"LINE"},
+    {"id":"factory_quantum_core","business":"factory","icon":"quantum_core","primary":"#8A3FD1","neon":"#2FD8FF","glyph":"CORE"},
+    {"id":"factory_predictive_ai","business":"factory","icon":"ai_chip","primary":"#6235A8","neon":"#F078FF","glyph":"AI"}
+  ]
+}
