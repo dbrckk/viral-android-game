@@ -1,0 +1,33 @@
+name: Art Assets Validation
+
+on:
+  push:
+    paths:
+      - "assets/art/**"
+      - "docs/art/**"
+      - "tools/art/**"
+      - ".github/workflows/art-assets.yml"
+  pull_request:
+    paths:
+      - "assets/art/**"
+      - "docs/art/**"
+      - "tools/art/**"
+      - ".github/workflows/art-assets.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-art:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate art manifest and direction contract
+        run: python tools/art/validate_manifest.py
