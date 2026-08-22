@@ -13,12 +13,12 @@ class GameSaveStore(context:Context){
   val managers=JSONArray().apply{state.hiredManagers().forEach{put(it)}}
   val permanent=JSONArray().apply{state.purchasedPermanentUpgrades().forEach{put(it)}}
   val missions=JSONArray().apply{state.claimedMissions().forEach{put(it)}}
-  val payload=JSONObject().apply{put("schemaVersion",4);put("cash",state.cash);put("gems",state.gems);put("savedAtEpochMillis",nowEpochMillis);put("businesses",levels);put("hiredManagers",managers);put("permanentUpgrades",permanent);put("claimedMissions",missions)}
+  val payload=JSONObject().apply{put("schemaVersion",5);put("cash",state.cash);put("gems",state.gems);put("prestigeCrowns",state.prestigeCrowns);put("runEarnings",state.runEarnings);put("savedAtEpochMillis",nowEpochMillis);put("businesses",levels);put("hiredManagers",managers);put("permanentUpgrades",permanent);put("claimedMissions",missions)}
   prefs.edit().putString(KEY_SAVE,payload.toString()).apply()
  }
  fun restore(nowEpochMillis:Long=System.currentTimeMillis()):RestoreResult{
   val raw=prefs.getString(KEY_SAVE,null)?:return RestoreResult(GameState(),0,0.0)
-  return try{val j=JSONObject(raw);val s=GameState();s.restoreEconomy(j.optDouble("cash",s.cash),j.optInt("gems",s.gems),parseLevels(j.optJSONArray("businesses")),parseIds(j.optJSONArray("hiredManagers")),parseIds(j.optJSONArray("permanentUpgrades")),parseIds(j.optJSONArray("claimedMissions")));val saved=j.optLong("savedAtEpochMillis",nowEpochMillis);val seconds=min(((nowEpochMillis-saved).coerceAtLeast(0)/1000),MAX_OFFLINE_SECONDS);val earnings=s.totalIncomePerSecond*seconds;s.addCash(earnings);RestoreResult(s,seconds,earnings)}catch(_:Exception){RestoreResult(GameState(),0,0.0)}
+  return try{val j=JSONObject(raw);val s=GameState();s.restoreEconomy(j.optDouble("cash",s.cash),j.optInt("gems",s.gems),parseLevels(j.optJSONArray("businesses")),parseIds(j.optJSONArray("hiredManagers")),parseIds(j.optJSONArray("permanentUpgrades")),parseIds(j.optJSONArray("claimedMissions")),j.optInt("prestigeCrowns",0),j.optDouble("runEarnings",0.0));val saved=j.optLong("savedAtEpochMillis",nowEpochMillis);val seconds=min(((nowEpochMillis-saved).coerceAtLeast(0)/1000),MAX_OFFLINE_SECONDS);val earnings=s.totalIncomePerSecond*seconds;s.addCash(earnings,true);RestoreResult(s,seconds,earnings)}catch(_:Exception){RestoreResult(GameState(),0,0.0)}
  }
  private fun parseLevels(a:JSONArray?):Map<String,Int>{if(a==null)return emptyMap();val r=mutableMapOf<String,Int>();for(i in 0 until a.length()){val o=a.optJSONObject(i)?:continue;val id=o.optString("id");if(id.isNotBlank())r[id]=o.optInt("level",1).coerceAtLeast(1)};return r}
  private fun parseIds(a:JSONArray?):Set<String>{if(a==null)return emptySet();return buildSet{for(i in 0 until a.length()){val id=a.optString(i);if(id.isNotBlank())add(id)}}}
