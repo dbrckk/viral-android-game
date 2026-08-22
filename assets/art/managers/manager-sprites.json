@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "style": "dark-sci-fi-neon-portrait",
+  "portraits": [
+    {"id":"maya_flux","business":"street_stand","name":"Maya Flux","role":"Street Operator","primary":"#F05A28","neon":"#2FD8FF","hair":"#202B46","outfit":"#FF7A1A","accessory":"visor","bonus":1.5,"unlockLevel":25},
+    {"id":"noah_vector","business":"corner_shop","name":"Noah Vector","role":"Retail Strategist","primary":"#1E74D8","neon":"#9B5CFF","hair":"#151A2B","outfit":"#2459A8","accessory":"holo_glasses","bonus":1.75,"unlockLevel":100},
+    {"id":"iris_forge","business":"workshop","name":"Iris Forge","role":"Chief Engineer","primary":"#D9771F","neon":"#38C8FF","hair":"#6B301C","outfit":"#C45D20","accessory":"headset","bonus":2.0,"unlockLevel":250},
+    {"id":"kael_nova","business":"factory","name":"Kael Nova","role":"Industrial Director","primary":"#8A3FD1","neon":"#2FD8FF","hair":"#D7DDF7","outfit":"#61329E","accessory":"cyber_implant","bonus":2.5,"unlockLevel":500}
+  ],
+  "states": ["locked","available","hired","boosted"],
+  "portraitContract": {"aspect":"1:1","safeArea":0.82,"background":"transparent","rimLight":true,"mobileReadable":true}
+}
