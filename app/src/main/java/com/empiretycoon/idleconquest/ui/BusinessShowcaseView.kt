@@ -9,6 +9,7 @@ import android.graphics.RectF
 import android.view.MotionEvent
 import android.view.View
 import com.empiretycoon.idleconquest.art.BusinessArtResolver
+import com.empiretycoon.idleconquest.game.BusinessState
 import com.empiretycoon.idleconquest.game.GameSaveStore
 import com.empiretycoon.idleconquest.game.GameState
 import java.util.Locale
@@ -23,6 +24,10 @@ class BusinessShowcaseView(context: Context) : View(context) {
     private var lastAutosaveNanos = 0L
     private var offlineBannerText: String? = null
     private var offlineBannerUntilNanos = 0L
+    private var milestoneBannerText: String? = null
+    private var milestoneBannerUntilNanos = 0L
+    private var highlightedMilestoneBusinessId: String? = null
+    private var highlightedMilestoneUntilNanos = 0L
 
     init {
         val restore = saveStore.restore()
@@ -45,9 +50,21 @@ class BusinessShowcaseView(context: Context) : View(context) {
         val hudHeight = height * 0.12f
         drawHud(canvas, RectF(margin, margin, width - margin, margin + hudHeight))
 
-        val bannerHeight = if (offlineBannerText != null && System.nanoTime() < offlineBannerUntilNanos) height * 0.055f else 0f
+        val now = System.nanoTime()
+        val bannerText = when {
+            milestoneBannerText != null && now < milestoneBannerUntilNanos -> milestoneBannerText
+            offlineBannerText != null && now < offlineBannerUntilNanos -> offlineBannerText
+            else -> null
+        }
+
+        val bannerHeight = if (bannerText != null) height * 0.055f else 0f
         if (bannerHeight > 0f) {
-            drawOfflineBanner(canvas, RectF(margin, margin + hudHeight + 8f, width - margin, margin + hudHeight + 8f + bannerHeight))
+            drawBanner(
+                canvas,
+                RectF(margin, margin + hudHeight + 8f, width - margin, margin + hudHeight + 8f + bannerHeight),
+                bannerText.orEmpty(),
+                milestone = milestoneBannerText != null && now < milestoneBannerUntilNanos
+            )
         }
 
         upgradeRects.clear()
@@ -60,7 +77,7 @@ class BusinessShowcaseView(context: Context) : View(context) {
         gameState.businesses.forEachIndexed { index, _ ->
             val top = topStart + index * (cardHeight + gap)
             val rect = RectF(margin, top, width - margin, top + cardHeight)
-            drawBusinessCard(canvas, rect, index)
+            drawBusinessCard(canvas, rect, index, now)
         }
 
         postInvalidateOnAnimation()
@@ -111,27 +128,39 @@ class BusinessShowcaseView(context: Context) : View(context) {
         paint.textAlign = Paint.Align.LEFT
     }
 
-    private fun drawOfflineBanner(canvas: Canvas, rect: RectF) {
+    private fun drawBanner(canvas: Canvas, rect: RectF, text: String, milestone: Boolean) {
         paint.style = Paint.Style.FILL
-        paint.color = Color.rgb(34, 74, 63)
+        paint.color = if (milestone) Color.rgb(95, 67, 18) else Color.rgb(34, 74, 63)
         canvas.drawRoundRect(rect, 20f, 20f, paint)
-        paint.color = Color.rgb(143, 255, 194)
+        paint.color = if (milestone) Color.rgb(255, 220, 112) else Color.rgb(143, 255, 194)
         paint.textAlign = Paint.Align.CENTER
         paint.isFakeBoldText = true
         paint.textSize = width * 0.030f
-        canvas.drawText(offlineBannerText.orEmpty(), rect.centerX(), rect.centerY() + paint.textSize * 0.35f, paint)
+        canvas.drawText(text, rect.centerX(), rect.centerY() + paint.textSize * 0.35f, paint)
         paint.textAlign = Paint.Align.LEFT
         paint.isFakeBoldText = false
     }
 
-    private fun drawBusinessCard(canvas: Canvas, rect: RectF, index: Int) {
+    private fun drawBusinessCard(canvas: Canvas, rect: RectF, index: Int, nowNanos: Long) {
         val business = gameState.businesses[index]
         val tier = gameState.tierFor(business.level)
-        val selection = resolver.resolve(business.id, tier = tier)
+        val milestoneActive = highlightedMilestoneBusinessId == business.id && nowNanos < highlightedMilestoneUntilNanos
+        val selection = resolver.resolve(
+            businessId = business.id,
+            tier = tier,
+            state = if (milestoneActive) "milestone" else "default"
+        )
 
         paint.style = Paint.Style.FILL
-        paint.color = Color.rgb(15, 20, 42)
+        paint.color = if (milestoneActive) Color.rgb(38, 30, 54) else Color.rgb(15, 20, 42)
         canvas.drawRoundRect(rect, 28f, 28f, paint)
+
+        if (milestoneActive) {
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = 5f
+            paint.color = Color.rgb(245, 201, 92)
+            canvas.drawRoundRect(rect, 28f, 28f, paint)
+        }
 
         val contentInset = 16f
         val artRect = RectF(
@@ -154,22 +183,38 @@ class BusinessShowcaseView(context: Context) : View(context) {
         }
 
         val textLeft = rect.left + rect.width() * 0.39f
+        paint.style = Paint.Style.FILL
         paint.color = Color.WHITE
         paint.textSize = width * 0.038f
         paint.isFakeBoldText = true
-        canvas.drawText(business.displayName, textLeft, rect.top + rect.height() * 0.24f, paint)
+        canvas.drawText(business.displayName, textLeft, rect.top + rect.height() * 0.22f, paint)
 
         paint.isFakeBoldText = false
-        paint.textSize = width * 0.030f
+        paint.textSize = width * 0.028f
         paint.color = Color.rgb(188, 198, 225)
-        canvas.drawText("Lv. ${business.level}  •  ${tier.uppercase(Locale.US)}", textLeft, rect.top + rect.height() * 0.43f, paint)
+        canvas.drawText("Lv. ${business.level}  •  ${tier.uppercase(Locale.US)}", textLeft, rect.top + rect.height() * 0.39f, paint)
 
         paint.color = Color.rgb(92, 230, 145)
-        canvas.drawText("+${formatNumber(business.incomePerSecond)}/s", textLeft, rect.top + rect.height() * 0.61f, paint)
+        canvas.drawText(
+            "+${formatNumber(business.incomePerSecond)}/s  ×${formatMultiplier(business.productionMultiplier)}",
+            textLeft,
+            rect.top + rect.height() * 0.55f,
+            paint
+        )
+
+        val nextMilestone = BusinessState.nextMilestoneAfter(business.level)
+        paint.color = Color.rgb(245, 201, 92)
+        paint.textSize = width * 0.023f
+        val milestoneText = if (nextMilestone != null) {
+            "NEXT MILESTONE Lv.${nextMilestone.level}  ×${formatMultiplier(nextMilestone.multiplier)}"
+        } else {
+            "MAX MILESTONE  ×${formatMultiplier(business.productionMultiplier)}"
+        }
+        canvas.drawText(milestoneText, textLeft, rect.top + rect.height() * 0.69f, paint)
 
         val button = RectF(
             textLeft,
-            rect.bottom - rect.height() * 0.30f,
+            rect.bottom - rect.height() * 0.24f,
             rect.right - contentInset,
             rect.bottom - contentInset
         )
@@ -188,7 +233,7 @@ class BusinessShowcaseView(context: Context) : View(context) {
         paint.color = Color.WHITE
         paint.textAlign = Paint.Align.CENTER
         paint.isFakeBoldText = true
-        paint.textSize = width * 0.029f
+        paint.textSize = width * 0.027f
         canvas.drawText(
             "UPGRADE  $ ${formatNumber(business.nextUpgradeCost)}",
             rect.centerX(),
@@ -202,10 +247,20 @@ class BusinessShowcaseView(context: Context) : View(context) {
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_UP) {
             val index = upgradeRects.indexOfFirst { it.contains(event.x, event.y) }
-            if (index >= 0 && gameState.upgrade(index)) {
-                saveStore.save(gameState)
-                performClick()
-                invalidate()
+            if (index >= 0) {
+                val businessBefore = gameState.businesses[index]
+                val result = gameState.upgrade(index)
+                if (result.upgraded) {
+                    result.reachedMilestone?.let { milestone ->
+                        milestoneBannerText = "MILESTONE! ${businessBefore.displayName} Lv.${milestone.level}  ×${formatMultiplier(milestone.multiplier)} PRODUCTION"
+                        milestoneBannerUntilNanos = System.nanoTime() + MILESTONE_FEEDBACK_NANOS
+                        highlightedMilestoneBusinessId = businessBefore.id
+                        highlightedMilestoneUntilNanos = milestoneBannerUntilNanos
+                    }
+                    saveStore.save(gameState)
+                    performClick()
+                    invalidate()
+                }
             }
             return true
         }
@@ -235,6 +290,12 @@ class BusinessShowcaseView(context: Context) : View(context) {
         paint.alpha = 255
     }
 
+    private fun formatMultiplier(value: Double): String = if (value % 1.0 == 0.0) {
+        value.toInt().toString()
+    } else {
+        String.format(Locale.US, "%.1f", value)
+    }
+
     private fun formatNumber(value: Double): String = when {
         value >= 1_000_000_000_000.0 -> String.format(Locale.US, "%.2fT", value / 1_000_000_000_000.0)
         value >= 1_000_000_000.0 -> String.format(Locale.US, "%.2fB", value / 1_000_000_000.0)
@@ -245,5 +306,6 @@ class BusinessShowcaseView(context: Context) : View(context) {
 
     companion object {
         private const val AUTOSAVE_INTERVAL_NANOS = 10_000_000_000L
+        private const val MILESTONE_FEEDBACK_NANOS = 5_000_000_000L
     }
 }
