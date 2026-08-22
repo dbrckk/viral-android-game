@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "sourceReference": "assets/art/generated/atlas_01.json",
+  "perspective": "isometric-3-4",
+  "canvas": 512,
+  "tiers": ["base", "lv25", "lv100", "lv250", "lv500", "master"],
+  "businesses": {
+    "street_stand": {
+      "palette": {"primary":"#F05A28","secondary":"#F6C445","neon":"#2FD8FF","roof":"#FF7A1A"},
+      "tiers": {
+        "base":{"floors":1,"width":0.56,"height":0.40,"roof":"umbrella","sign":"FOOD","props":1,"lights":1,"tower":0},
+        "lv25":{"floors":1,"width":0.64,"height":0.45,"roof":"umbrella","sign":"FOOD","props":3,"lights":2,"tower":0},
+        "lv100":{"floors":1,"width":0.72,"height":0.54,"roof":"flat-neon","sign":"FOOD","props":4,"lights":4,"tower":0},
+        "lv250":{"floors":2,"width":0.78,"height":0.63,"roof":"flat-neon","sign":"EMPIRE","props":5,"lights":6,"tower":0},
+        "lv500":{"floors":2,"width":0.84,"height":0.72,"roof":"billboard","sign":"FOOD","props":6,"lights":8,"tower":1},
+        "master":{"floors":3,"width":0.90,"height":0.84,"roof":"billboard","sign":"EMPIRE","props":8,"lights":12,"tower":2}
+      }
+    },
+    "corner_shop": {
+      "palette": {"primary":"#1E74D8","secondary":"#43C7FF","neon":"#9B5CFF","roof":"#243B78"},
+      "tiers": {
+        "base":{"floors":1,"width":0.62,"height":0.46,"roof":"flat","sign":"SHOP","props":1,"lights":2,"tower":0},
+        "lv25":{"floors":1,"width":0.70,"height":0.52,"roof":"flat","sign":"SHOP","props":3,"lights":4,"tower":0},
+        "lv100":{"floors":2,"width":0.74,"height":0.62,"roof":"flat-neon","sign":"SHOP","props":4,"lights":6,"tower":0},
+        "lv250":{"floors":3,"width":0.78,"height":0.72,"roof":"flat-neon","sign":"MART","props":5,"lights":8,"tower":0},
+        "lv500":{"floors":4,"width":0.82,"height":0.80,"roof":"billboard","sign":"MART","props":6,"lights":10,"tower":1},
+        "master":{"floors":5,"width":0.86,"height":0.88,"roof":"billboard","sign":"MEGA MART","props":8,"lights":14,"tower":1}
+      }
+    },
+    "workshop": {
+      "palette": {"primary":"#D9771F","secondary":"#F5A33A","neon":"#38C8FF","roof":"#36577A"},
+      "tiers": {
+        "base":{"floors":1,"width":0.64,"height":0.45,"roof":"shed","sign":"WORK","props":2,"lights":1,"tower":0},
+        "lv25":{"floors":1,"width":0.70,"height":0.50,"roof":"shed","sign":"WORK","props":4,"lights":3,"tower":0},
+        "lv100":{"floors":2,"width":0.75,"height":0.60,"roof":"industrial","sign":"WORKSHOP","props":5,"lights":5,"tower":1},
+        "lv250":{"floors":2,"width":0.80,"height":0.69,"roof":"industrial","sign":"WORKSHOP","props":6,"lights":7,"tower":2},
+        "lv500":{"floors":3,"width":0.85,"height":0.78,"roof":"industrial","sign":"FOUNDRY","props":8,"lights":9,"tower":3},
+        "master":{"floors":4,"width":0.90,"height":0.88,"roof":"industrial-neon","sign":"FOUNDRY","props":10,"lights":13,"tower":4}
+      }
+    },
+    "factory": {
+      "palette": {"primary":"#8A3FD1","secondary":"#F0782E","neon":"#2FD8FF","roof":"#27355F"},
+      "tiers": {
+        "base":{"floors":1,"width":0.66,"height":0.48,"roof":"industrial","sign":"FACTORY","props":2,"lights":2,"tower":2},
+        "lv25":{"floors":1,"width":0.72,"height":0.55,"roof":"industrial","sign":"FACTORY","props":4,"lights":4,"tower":2},
+        "lv100":{"floors":2,"width":0.78,"height":0.64,"roof":"industrial","sign":"FACTORY","props":5,"lights":6,"tower":3},
+        "lv250":{"floors":3,"width":0.82,"height":0.72,"roof":"industrial-neon","sign":"PLANT","props":7,"lights":8,"tower":3},
+        "lv500":{"floors":4,"width":0.87,"height":0.81,"roof":"industrial-neon","sign":"PLANT","props":8,"lights":11,"tower":4},
+        "master":{"floors":5,"width":0.92,"height":0.90,"roof":"industrial-neon","sign":"MEGA FACTORY","props":10,"lights":15,"tower":5}
+      }
+    }
+  },
+  "states": {
+    "default":{"glow":1.0,"ring":false,"crown":false},
+    "unlock":{"glow":1.35,"ring":true,"ringColor":"#28B8FF","crown":false},
+    "milestone":{"glow":1.55,"ring":true,"ringColor":"#FFB52E","crown":true}
+  }
+}
