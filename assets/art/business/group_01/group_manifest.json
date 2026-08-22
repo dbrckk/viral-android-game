@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "groupId": "group_01",
+  "sourceManifest": "assets/art/manifest.json",
+  "referenceRoles": [
+    "business-group-01-sprites-and-animation-reference",
+    "business-ui-integration-reference",
+    "icons-performance-and-layering-reference"
+  ],
+  "delivery": {
+    "masterResolution": "2048x2048",
+    "format": "png",
+    "color": "rgba32",
+    "background": "transparent",
+    "perspective": "isometric-3-4",
+    "layers": ["base_structure", "details", "lights_emissive", "effects_particles"],
+    "profiles": ["full", "reduced_motion", "power_save"]
+  },
+  "businesses": [
+    {
+      "id": "street_stand",
+      "accent": "green-earth-warm",
+      "tiers": ["base", "lv25", "lv100", "lv250", "lv500", "master"],
+      "states": ["default", "unlock", "milestone"],
+      "assetRoot": "assets/art/business/group_01/street_stand"
+    },
+    {
+      "id": "corner_shop",
+      "accent": "blue-cyan-urban",
+      "tiers": ["base", "lv25", "lv100", "lv250", "lv500", "master"],
+      "states": ["default", "unlock", "milestone"],
+      "assetRoot": "assets/art/business/group_01/corner_shop"
+    },
+    {
+      "id": "workshop",
+      "accent": "orange-industrial",
+      "tiers": ["base", "lv25", "lv100", "lv250", "lv500", "master"],
+      "states": ["default", "unlock", "milestone"],
+      "assetRoot": "assets/art/business/group_01/workshop"
+    },
+    {
+      "id": "factory",
+      "accent": "violet-magenta-industrial",
+      "tiers": ["base", "lv25", "lv100", "lv250", "lv500", "master"],
+      "states": ["default", "unlock", "milestone"],
+      "assetRoot": "assets/art/business/group_01/factory"
+    }
+  ],
+  "android": {
+    "runtimeRoot": "app/src/main/assets/art/business/group_01",
+    "naming": "<business>__<tier>__<state>__<layer>__<profile>.png",
+    "fallbackOrder": ["requested-profile", "full"]
+  }
+}
