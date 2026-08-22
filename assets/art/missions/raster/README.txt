@@ -1,0 +1,1 @@
+missions_atlas_runtime.webp layout: 4 columns x 6 rows. Columns: locked, active, complete, claimed. Rows: first_25_levels, street_lv100, income_10k, hire_two, buy_four_upgrades, factory_lv500. Runtime cell source size: 32x24 within a 128x144 atlas.
