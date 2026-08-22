@@ -1,0 +1,11 @@
+{
+  "schemaVersion":1,
+  "direction":"dark sci-fi tycoon portraits, neon rim light, clean mobile silhouette",
+  "managers":[
+    {"id":"mia_flux","name":"Mia Flux","business":"street_stand","role":"Street Strategist","unlockLevel":15,"cost":750,"incomeMultiplier":1.5,"palette":{"skin":"#F2B38D","hair":"#231A35","primary":"#F05A28","neon":"#2FD8FF"},"portrait":{"hair":"bob","outfit":"hoodie","prop":"tablet","badge":"coin"}},
+    {"id":"noah_vector","name":"Noah Vector","business":"corner_shop","role":"Retail Analyst","unlockLevel":40,"cost":9000,"incomeMultiplier":1.75,"palette":{"skin":"#B97955","hair":"#161C2E","primary":"#1E74D8","neon":"#9B5CFF"},"portrait":{"hair":"fade","outfit":"jacket","prop":"scanner","badge":"gem"}},
+    {"id":"aya_forge","name":"Aya Forge","business":"workshop","role":"Chief Engineer","unlockLevel":100,"cost":85000,"incomeMultiplier":2.0,"palette":{"skin":"#D99572","hair":"#20252C","primary":"#D9771F","neon":"#38C8FF"},"portrait":{"hair":"ponytail","outfit":"engineer","prop":"wrench","badge":"gear"}},
+    {"id":"rex_nova","name":"Rex Nova","business":"factory","role":"Plant Director","unlockLevel":250,"cost":750000,"incomeMultiplier":2.5,"palette":{"skin":"#8E5B46","hair":"#111522","primary":"#8A3FD1","neon":"#2FD8FF"},"portrait":{"hair":"crop","outfit":"executive","prop":"holo","badge":"crown"}}
+  ],
+  "states":{"locked":{"saturation":0.15,"glow":0.25},"available":{"saturation":1.0,"glow":1.0},"hired":{"saturation":1.0,"glow":1.5,"ring":"#F5C95C"}}
+}
