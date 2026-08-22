@@ -7,15 +7,18 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
+import android.util.Base64
 import com.empiretycoon.idleconquest.game.MissionDefinition
 
 class MissionBadgeRenderer(private val context: Context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private val atlas: Bitmap? by lazy {
         runCatching {
-            context.assets.open("art/missions/raster/missions_atlas_runtime64.webp").use {
-                BitmapFactory.decodeStream(it)
-            }
+            val encoded = context.assets.open("art/missions/raster/missions_atlas_runtime64.webp.b64")
+                .bufferedReader()
+                .use { it.readText().trim() }
+            val bytes = Base64.decode(encoded, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
         }.getOrNull()
     }
 
