@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "direction": "dark sci-fi tycoon prestige, royal gold with cyan-violet energy, mobile-readable silhouettes",
+  "currency": {
+    "id": "prestige_crown",
+    "glyph": "crown_core",
+    "primary": "#F5C95C",
+    "secondary": "#FF9F2D",
+    "energy": "#48D8FF"
+  },
+  "states": {
+    "locked": {"glow": 0.25, "ring": "#3A4258"},
+    "ready": {"glow": 1.25, "ring": "#48D8FF"},
+    "prestiging": {"glow": 1.8, "ring": "#F5C95C"},
+    "owned": {"glow": 1.0, "ring": "#F5C95C"}
+  },
+  "effects": ["crown_burst", "energy_ring", "ascending_particles", "empire_reset_flash"],
+  "ui": {
+    "buttonLabel": "PRESTIGE",
+    "rewardPrefix": "+",
+    "multiplierPrefix": "EMPIRE x"
+  }
+}
