@@ -9,73 +9,27 @@ import android.graphics.RectF
 import android.view.MotionEvent
 import android.view.View
 import com.empiretycoon.idleconquest.art.BusinessArtResolver
+import com.empiretycoon.idleconquest.art.ManagerPortraitRenderer
 import com.empiretycoon.idleconquest.art.ProceduralBusinessSpriteRenderer
-import com.empiretycoon.idleconquest.game.BusinessState
-import com.empiretycoon.idleconquest.game.BuyMode
-import com.empiretycoon.idleconquest.game.GameSaveStore
-import com.empiretycoon.idleconquest.game.GameState
+import com.empiretycoon.idleconquest.game.*
 import java.util.Locale
 
-class BusinessShowcaseView(context: Context) : View(context) {
-    private val resolver = BusinessArtResolver(context)
-    private val proceduralRenderer = ProceduralBusinessSpriteRenderer(context)
-    private val saveStore = GameSaveStore(context)
-    private var gameState: GameState
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val upgradeRects = mutableListOf<RectF>()
-    private val modeRects = mutableListOf<Pair<BuyMode, RectF>>()
-    private var buyMode = BuyMode.X1
-    private var lastFrameNanos = 0L
-    private var lastAutosaveNanos = 0L
-    private var bannerText: String? = null
-    private var bannerUntil = 0L
-    private var highlightedBusinessId: String? = null
-
-    init {
-        val restore = saveStore.restore(); gameState = restore.state
-        if (restore.offlineEarnings > 0.0) showBanner("WELCOME BACK  +$ ${formatNumber(restore.offlineEarnings)}", 6_000_000_000L)
-        isClickable = true; keepScreenOn = true
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas); updateEconomy(); maybeAutosave(); canvas.drawColor(Color.rgb(8, 10, 24))
-        val margin = width * .045f; val hudH = height * .105f; val modeH = height * .052f
-        drawHud(canvas, RectF(margin, margin, width-margin, margin+hudH))
-        drawBuyModes(canvas, RectF(margin, margin+hudH+8f, width-margin, margin+hudH+8f+modeH))
-        val now = System.nanoTime(); val visibleBanner = bannerText != null && now < bannerUntil
-        val bannerH = if (visibleBanner) height*.045f else 0f
-        if (visibleBanner) drawBanner(canvas, RectF(margin, margin+hudH+modeH+16f, width-margin, margin+hudH+modeH+16f+bannerH), bannerText.orEmpty())
-        upgradeRects.clear()
-        val top = margin+hudH+modeH+margin+bannerH; val gap=margin*.55f
-        val cardH=(height-top-margin-gap*3f)/4f
-        gameState.businesses.indices.forEach { i -> drawBusinessCard(canvas, RectF(margin, top+i*(cardH+gap), width-margin, top+i*(cardH+gap)+cardH), i, now) }
-        postInvalidateOnAnimation()
-    }
-
-    private fun updateEconomy(){ val n=System.nanoTime(); if(lastFrameNanos!=0L) gameState.tick(((n-lastFrameNanos)/1e9).coerceAtMost(.25)); lastFrameNanos=n }
-    private fun maybeAutosave(){ val n=System.nanoTime(); if(lastAutosaveNanos==0L||n-lastAutosaveNanos>=10_000_000_000L){saveStore.save(gameState);lastAutosaveNanos=n} }
-    fun persistNow()=saveStore.save(gameState)
-
-    private fun drawHud(c:Canvas,r:RectF){ paint.style=Paint.Style.FILL;paint.color=Color.rgb(13,17,36);c.drawRoundRect(r,30f,30f,paint);paint.isFakeBoldText=true;paint.textSize=width*.043f;paint.color=Color.rgb(245,201,92);c.drawText("EMPIRE TYCOON",r.left+24,r.top+r.height()*.38f,paint);paint.isFakeBoldText=false;paint.textSize=width*.033f;paint.color=Color.WHITE;c.drawText("$ ${formatNumber(gameState.cash)}",r.left+24,r.bottom-18,paint);paint.color=Color.rgb(92,230,145);c.drawText("+${formatNumber(gameState.totalIncomePerSecond)}/s",r.centerX()-10,r.bottom-18,paint);paint.textAlign=Paint.Align.RIGHT;paint.color=Color.rgb(120,187,255);c.drawText("◆ ${gameState.gems}",r.right-24,r.bottom-18,paint);paint.textAlign=Paint.Align.LEFT }
-
-    private fun drawBuyModes(c:Canvas,r:RectF){ modeRects.clear(); val modes=BuyMode.entries; val gap=8f; val w=(r.width()-gap*3)/4; modes.forEachIndexed{i,m-> val b=RectF(r.left+i*(w+gap),r.top,r.left+i*(w+gap)+w,r.bottom);modeRects+=m to b;paint.style=Paint.Style.FILL;paint.color=if(m==buyMode) Color.rgb(43,121,220) else Color.rgb(29,39,70);c.drawRoundRect(b,18f,18f,paint);paint.color=Color.WHITE;paint.textAlign=Paint.Align.CENTER;paint.isFakeBoldText=true;paint.textSize=width*.027f;c.drawText(if(m==BuyMode.MAX)"MAX" else "×${m.name.drop(1)}",b.centerX(),b.centerY()+paint.textSize*.35f,paint)};paint.textAlign=Paint.Align.LEFT;paint.isFakeBoldText=false }
-    private fun drawBanner(c:Canvas,r:RectF,t:String){paint.style=Paint.Style.FILL;paint.color=Color.rgb(95,67,18);c.drawRoundRect(r,18f,18f,paint);paint.color=Color.rgb(255,220,112);paint.textAlign=Paint.Align.CENTER;paint.isFakeBoldText=true;paint.textSize=width*.026f;c.drawText(t,r.centerX(),r.centerY()+paint.textSize*.35f,paint);paint.textAlign=Paint.Align.LEFT;paint.isFakeBoldText=false}
-
-    private fun drawBusinessCard(c:Canvas,r:RectF,index:Int,now:Long){
-        val b=gameState.businesses[index]; val tier=gameState.tierFor(b.level); val active=highlightedBusinessId==b.id&&now<bannerUntil; val state=if(active)"milestone" else "default"; val art=resolver.resolve(b.id,tier,state=state)
-        paint.style=Paint.Style.FILL; paint.color=if(active)Color.rgb(38,30,54)else Color.rgb(15,20,42); c.drawRoundRect(r,26f,26f,paint)
-        if(active){paint.style=Paint.Style.STROKE;paint.strokeWidth=5f;paint.color=Color.rgb(245,201,92);c.drawRoundRect(r,26f,26f,paint)}
-        val inset=14f; val ar=RectF(r.left+inset,r.top+inset,r.left+r.width()*.32f,r.bottom-inset)
-        if(art.layerPaths.isNotEmpty()) art.layerPaths.forEach{p->context.assets.open(p).use{BitmapFactory.decodeStream(it)?.let{x->c.drawBitmap(x,null,ar,paint)}}}
-        else proceduralRenderer.draw(c, ar, b.id, tier, state)
-        val x=r.left+r.width()*.37f; paint.style=Paint.Style.FILL;paint.color=Color.WHITE;paint.textSize=width*.034f;paint.isFakeBoldText=true;c.drawText(b.displayName,x,r.top+r.height()*.20f,paint);paint.isFakeBoldText=false;paint.textSize=width*.025f;paint.color=Color.rgb(188,198,225);c.drawText("Lv.${b.level} • ${tier.uppercase(Locale.US)} • ×${formatMultiplier(b.productionMultiplier)}",x,r.top+r.height()*.37f,paint);paint.color=Color.rgb(92,230,145);c.drawText("+${formatNumber(b.incomePerSecond)}/s",x,r.top+r.height()*.52f,paint);val next=BusinessState.nextMilestoneAfter(b.level);paint.color=Color.rgb(245,201,92);paint.textSize=width*.021f;c.drawText(if(next!=null)"NEXT Lv.${next.level} ×${formatMultiplier(next.multiplier)}" else "MAX MILESTONE",x,r.top+r.height()*.65f,paint);val button=RectF(x,r.bottom-r.height()*.27f,r.right-inset,r.bottom-inset);upgradeRects+=button;drawUpgradeButton(c,button,index)
-    }
-
-    private fun drawUpgradeButton(c:Canvas,r:RectF,index:Int){val q=gameState.quoteUpgrade(index,buyMode);val enabled=gameState.canUpgrade(index,buyMode);paint.style=Paint.Style.FILL;paint.color=if(enabled)Color.rgb(42,166,105)else Color.rgb(59,68,91);c.drawRoundRect(r,20f,20f,paint);paint.color=Color.WHITE;paint.textAlign=Paint.Align.CENTER;paint.isFakeBoldText=true;paint.textSize=width*.024f;val label=if(q.levels>0)"UPGRADE +${q.levels}  $ ${formatNumber(q.cost)}" else "UPGRADE MAX";c.drawText(label,r.centerX(),r.centerY()+paint.textSize*.35f,paint);paint.textAlign=Paint.Align.LEFT;paint.isFakeBoldText=false}
-
-    override fun onTouchEvent(e:MotionEvent):Boolean{if(e.action==MotionEvent.ACTION_UP){modeRects.firstOrNull{it.second.contains(e.x,e.y)}?.let{buyMode=it.first;performClick();invalidate();return true};val i=upgradeRects.indexOfFirst{it.contains(e.x,e.y)};if(i>=0){val before=gameState.businesses[i];val result=gameState.upgrade(i,buyMode);if(result.upgraded){result.reachedMilestones.lastOrNull()?.let{m->highlightedBusinessId=before.id;showBanner("MILESTONE! ${before.displayName} Lv.${m.level} ×${formatMultiplier(m.multiplier)}",5_000_000_000L)};saveStore.save(gameState);performClick();invalidate()}}};return true}
-    override fun performClick():Boolean{super.performClick();return true}
-    private fun showBanner(t:String,d:Long){bannerText=t;bannerUntil=System.nanoTime()+d}
-    private fun formatMultiplier(v:Double)=if(v%1.0==0.0)v.toInt().toString() else String.format(Locale.US,"%.1f",v)
-    private fun formatNumber(v:Double)=when{v>=1e12->String.format(Locale.US,"%.2fT",v/1e12);v>=1e9->String.format(Locale.US,"%.2fB",v/1e9);v>=1e6->String.format(Locale.US,"%.2fM",v/1e6);v>=1e3->String.format(Locale.US,"%.2fK",v/1e3);else->String.format(Locale.US,"%.0f",v)}
+class BusinessShowcaseView(context:Context):View(context){
+ private val resolver=BusinessArtResolver(context);private val sprites=ProceduralBusinessSpriteRenderer(context);private val portraits=ManagerPortraitRenderer(context);private val saveStore=GameSaveStore(context);private var gameState:GameState
+ private val paint=Paint(Paint.ANTI_ALIAS_FLAG);private val upgradeRects=mutableListOf<RectF>();private val managerRects=mutableListOf<Pair<String,RectF>>();private val modeRects=mutableListOf<Pair<BuyMode,RectF>>();private var buyMode=BuyMode.X1;private var lastFrame=0L;private var lastSave=0L;private var banner:String?=null;private var bannerUntil=0L;private var highlighted:String?=null
+ init{val r=saveStore.restore();gameState=r.state;if(r.offlineEarnings>0)show("WELCOME BACK +$ ${fmt(r.offlineEarnings)}",6_000_000_000L);isClickable=true;keepScreenOn=true}
+ override fun onDraw(c:Canvas){super.onDraw(c);update();autosave();c.drawColor(Color.rgb(8,10,24));val m=width*.04f;val hh=height*.095f;val mh=height*.048f;hud(c,RectF(m,m,width-m,m+hh));modes(c,RectF(m,m+hh+6,width-m,m+hh+6+mh));val now=System.nanoTime();val bh=if(banner!=null&&now<bannerUntil)height*.04f else 0f;if(bh>0)banner(c,RectF(m,m+hh+mh+12,width-m,m+hh+mh+12+bh),banner!!);upgradeRects.clear();managerRects.clear();val top=m+hh+mh+m+bh;val gap=m*.45f;val ch=(height-top-m-gap*3)/4;gameState.businesses.indices.forEach{i->card(c,RectF(m,top+i*(ch+gap),width-m,top+i*(ch+gap)+ch),i,now)};postInvalidateOnAnimation()}
+ private fun update(){val n=System.nanoTime();if(lastFrame!=0L)gameState.tick(((n-lastFrame)/1e9).coerceAtMost(.25));lastFrame=n}
+ private fun autosave(){val n=System.nanoTime();if(lastSave==0L||n-lastSave>=10_000_000_000L){saveStore.save(gameState);lastSave=n}}
+ fun persistNow()=saveStore.save(gameState)
+ private fun hud(c:Canvas,r:RectF){paint.style=Paint.Style.FILL;paint.color=Color.rgb(13,17,36);c.drawRoundRect(r,28f,28f,paint);paint.color=Color.rgb(245,201,92);paint.textSize=width*.041f;paint.isFakeBoldText=true;c.drawText("EMPIRE TYCOON",r.left+22,r.top+r.height()*.38f,paint);paint.isFakeBoldText=false;paint.textSize=width*.031f;paint.color=Color.WHITE;c.drawText("$ ${fmt(gameState.cash)}",r.left+22,r.bottom-16,paint);paint.color=Color.rgb(92,230,145);c.drawText("+${fmt(gameState.totalIncomePerSecond)}/s",r.centerX()-5,r.bottom-16,paint);paint.textAlign=Paint.Align.RIGHT;paint.color=Color.rgb(120,187,255);c.drawText("◆ ${gameState.gems}",r.right-22,r.bottom-16,paint);paint.textAlign=Paint.Align.LEFT}
+ private fun modes(c:Canvas,r:RectF){modeRects.clear();val gap=7f;val w=(r.width()-gap*3)/4;BuyMode.entries.forEachIndexed{i,x->val b=RectF(r.left+i*(w+gap),r.top,r.left+i*(w+gap)+w,r.bottom);modeRects+=x to b;paint.style=Paint.Style.FILL;paint.color=if(x==buyMode)Color.rgb(43,121,220)else Color.rgb(29,39,70);c.drawRoundRect(b,16f,16f,paint);paint.color=Color.WHITE;paint.textAlign=Paint.Align.CENTER;paint.isFakeBoldText=true;paint.textSize=width*.025f;c.drawText(if(x==BuyMode.MAX)"MAX" else "×${x.name.drop(1)}",b.centerX(),b.centerY()+paint.textSize*.35f,paint)};paint.textAlign=Paint.Align.LEFT;paint.isFakeBoldText=false}
+ private fun banner(c:Canvas,r:RectF,t:String){paint.style=Paint.Style.FILL;paint.color=Color.rgb(95,67,18);c.drawRoundRect(r,16f,16f,paint);paint.color=Color.rgb(255,220,112);paint.textAlign=Paint.Align.CENTER;paint.isFakeBoldText=true;paint.textSize=width*.024f;c.drawText(t,r.centerX(),r.centerY()+paint.textSize*.35f,paint);paint.textAlign=Paint.Align.LEFT;paint.isFakeBoldText=false}
+ private fun card(c:Canvas,r:RectF,i:Int,now:Long){val b=gameState.businesses[i];val tier=gameState.tierFor(b.level);val active=highlighted==b.id&&now<bannerUntil;val state=if(active)"milestone" else "default";val art=resolver.resolve(b.id,tier,state=state);paint.style=Paint.Style.FILL;paint.color=if(active)Color.rgb(38,30,54)else Color.rgb(15,20,42);c.drawRoundRect(r,24f,24f,paint);val inset=12f;val artR=RectF(r.left+inset,r.top+inset,r.left+r.width()*.27f,r.bottom-inset);if(art.layerPaths.isNotEmpty())art.layerPaths.forEach{p->context.assets.open(p).use{BitmapFactory.decodeStream(it)?.let{x->c.drawBitmap(x,null,artR,paint)}}}else sprites.draw(c,artR,b.id,tier,state);val x=r.left+r.width()*.31f;val manager=gameState.managerFor(b.id)!!;val pr=RectF(r.right-r.width()*.18f,r.top+inset,r.right-inset,r.top+r.height()*.48f);val managerState=when{manager.hired->"hired";b.level>=manager.definition.unlockLevel->"available";else->"locked"};portraits.draw(c,pr,manager.definition,managerState);managerRects+=manager.definition.id to pr;paint.style=Paint.Style.FILL;paint.color=Color.WHITE;paint.textSize=width*.030f;paint.isFakeBoldText=true;c.drawText(b.displayName,x,r.top+r.height()*.19f,paint);paint.isFakeBoldText=false;paint.textSize=width*.0215f;paint.color=Color.rgb(188,198,225);c.drawText("Lv.${b.level} • ${tier.uppercase(Locale.US)} • ×${mult(b.productionMultiplier)}",x,r.top+r.height()*.34f,paint);paint.color=Color.rgb(92,230,145);c.drawText("+${fmt(gameState.incomeFor(b))}/s",x,r.top+r.height()*.48f,paint);paint.color=Color.rgb(120,187,255);val mt=if(manager.hired)"${manager.definition.name} ×${mult(manager.definition.incomeMultiplier)}" else if(b.level>=manager.definition.unlockLevel)"HIRE ${manager.definition.name} $${fmt(manager.definition.cost)}" else "MANAGER Lv.${manager.definition.unlockLevel}";c.drawText(mt,x,r.top+r.height()*.62f,paint);val br=RectF(x,r.bottom-r.height()*.25f,r.right-r.width()*.20f,r.bottom-inset);upgradeRects+=br;upgradeButton(c,br,i)}
+ private fun upgradeButton(c:Canvas,r:RectF,i:Int){val q=gameState.quoteUpgrade(i,buyMode);val on=gameState.canUpgrade(i,buyMode);paint.style=Paint.Style.FILL;paint.color=if(on)Color.rgb(42,166,105)else Color.rgb(59,68,91);c.drawRoundRect(r,18f,18f,paint);paint.color=Color.WHITE;paint.textAlign=Paint.Align.CENTER;paint.isFakeBoldText=true;paint.textSize=width*.0215f;c.drawText(if(q.levels>0)"+${q.levels}  $ ${fmt(q.cost)}" else "MAX",r.centerX(),r.centerY()+paint.textSize*.35f,paint);paint.textAlign=Paint.Align.LEFT;paint.isFakeBoldText=false}
+ override fun onTouchEvent(e:MotionEvent):Boolean{if(e.action==MotionEvent.ACTION_UP){modeRects.firstOrNull{it.second.contains(e.x,e.y)}?.let{buyMode=it.first;performClick();invalidate();return true};managerRects.firstOrNull{it.second.contains(e.x,e.y)}?.let{val h=gameState.hire(it.first);if(h.hired){show("MANAGER HIRED! ${h.manager!!.name} ×${mult(h.manager.incomeMultiplier)}",5_000_000_000L);saveStore.save(gameState);performClick();invalidate()};return true};val i=upgradeRects.indexOfFirst{it.contains(e.x,e.y)};if(i>=0){val before=gameState.businesses[i];val result=gameState.upgrade(i,buyMode);if(result.upgraded){result.reachedMilestones.lastOrNull()?.let{m->highlighted=before.id;show("MILESTONE! ${before.displayName} Lv.${m.level} ×${mult(m.multiplier)}",5_000_000_000L)};saveStore.save(gameState);performClick();invalidate()}}};return true}
+ override fun performClick():Boolean{super.performClick();return true}
+ private fun show(t:String,d:Long){banner=t;bannerUntil=System.nanoTime()+d}
+ private fun mult(v:Double)=if(v%1.0==0.0)v.toInt().toString()else String.format(Locale.US,"%.2f",v)
+ private fun fmt(v:Double)=when{v>=1e12->String.format(Locale.US,"%.2fT",v/1e12);v>=1e9->String.format(Locale.US,"%.2fB",v/1e9);v>=1e6->String.format(Locale.US,"%.2fM",v/1e6);v>=1e3->String.format(Locale.US,"%.2fK",v/1e3);else->String.format(Locale.US,"%.0f",v)}
 }
