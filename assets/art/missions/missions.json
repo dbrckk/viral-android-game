@@ -1,0 +1,13 @@
+{
+  "schemaVersion":1,
+  "direction":"dark sci-fi mission badges, compact mobile readability, neon blue/gold/violet",
+  "states":["locked","active","complete","claimed"],
+  "missions":[
+    {"id":"first_25_levels","icon":"stack_up","primary":"#2FD8FF","secondary":"#2457A8","reward":"cash"},
+    {"id":"street_lv100","icon":"street_badge","primary":"#F05A28","secondary":"#F6C445","reward":"gems"},
+    {"id":"income_10k","icon":"income_wave","primary":"#5CE691","secondary":"#1E74D8","reward":"cash"},
+    {"id":"hire_two","icon":"team","primary":"#9B5CFF","secondary":"#2FD8FF","reward":"gems"},
+    {"id":"buy_four_upgrades","icon":"chip_star","primary":"#F5C95C","secondary":"#D9771F","reward":"cash"},
+    {"id":"factory_lv500","icon":"factory_crown","primary":"#8A3FD1","secondary":"#F0782E","reward":"gems"}
+  ]
+}
