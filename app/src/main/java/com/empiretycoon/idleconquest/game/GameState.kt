@@ -2,6 +2,16 @@ package com.empiretycoon.idleconquest.game
 
 import kotlin.math.pow
 
+data class Milestone(
+    val level: Int,
+    val multiplier: Double
+)
+
+data class UpgradeResult(
+    val upgraded: Boolean,
+    val reachedMilestone: Milestone? = null
+)
+
 data class BusinessState(
     val id: String,
     val displayName: String,
@@ -9,11 +19,31 @@ data class BusinessState(
     val baseCost: Double,
     val baseIncomePerSecond: Double
 ) {
+    val productionMultiplier: Double
+        get() = milestoneMultiplierFor(level)
+
     val incomePerSecond: Double
-        get() = baseIncomePerSecond * level.coerceAtLeast(1)
+        get() = baseIncomePerSecond * level.coerceAtLeast(1) * productionMultiplier
 
     val nextUpgradeCost: Double
         get() = baseCost * 1.15.pow(level.toDouble())
+
+    companion object {
+        private val milestones = listOf(
+            Milestone(25, 2.0),
+            Milestone(100, 4.0),
+            Milestone(250, 8.0),
+            Milestone(500, 16.0),
+            Milestone(1_000, 32.0)
+        )
+
+        fun milestoneMultiplierFor(level: Int): Double =
+            milestones.lastOrNull { level >= it.level }?.multiplier ?: 1.0
+
+        fun milestoneAt(level: Int): Milestone? = milestones.firstOrNull { it.level == level }
+
+        fun nextMilestoneAfter(level: Int): Milestone? = milestones.firstOrNull { it.level > level }
+    }
 }
 
 class GameState {
@@ -60,14 +90,18 @@ class GameState {
         return cash >= business.nextUpgradeCost
     }
 
-    fun upgrade(index: Int): Boolean {
-        val business = mutableBusinesses.getOrNull(index) ?: return false
+    fun upgrade(index: Int): UpgradeResult {
+        val business = mutableBusinesses.getOrNull(index) ?: return UpgradeResult(false)
         val cost = business.nextUpgradeCost
-        if (cash < cost) return false
+        if (cash < cost) return UpgradeResult(false)
 
         cash -= cost
-        mutableBusinesses[index] = business.copy(level = business.level + 1)
-        return true
+        val newLevel = business.level + 1
+        mutableBusinesses[index] = business.copy(level = newLevel)
+        return UpgradeResult(
+            upgraded = true,
+            reachedMilestone = BusinessState.milestoneAt(newLevel)
+        )
     }
 
     fun tierFor(level: Int): String = when {
