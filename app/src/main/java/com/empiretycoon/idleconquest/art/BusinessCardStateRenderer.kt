@@ -11,6 +11,7 @@ import android.util.Base64
 
 class BusinessCardStateRenderer(private val context: Context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+    private val statusBadges = StatusBadgeRenderer(context)
     private val columns = mapOf("normal" to 0, "milestone" to 1, "upgrade_ready" to 2)
     private val atlas: Bitmap? by lazy {
         runCatching {
@@ -26,6 +27,10 @@ class BusinessCardStateRenderer(private val context: Context) {
         val col = columns[state] ?: return false
         val w = bmp.width / 3
         canvas.drawBitmap(bmp, Rect(col * w, 0, (col + 1) * w, bmp.height), rect, paint)
+        if (state == "upgrade_ready") {
+            val s = rect.width() * .20f
+            statusBadges.draw(canvas, RectF(rect.right - s, rect.top, rect.right, rect.top + s), "upgrade_ready")
+        }
         return true
     }
 }
