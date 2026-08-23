@@ -13,6 +13,7 @@ class HudPanelRenderer(private val context: Context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private val columns = mapOf("hud" to 0, "missions" to 1, "banner" to 2)
     private val statChips = HudStatChipRenderer(context)
+    private val feedbackIcons = FeedbackIconRenderer(context)
     private val atlas: Bitmap? by lazy {
         runCatching {
             val encoded = context.assets.open("art/ui/raster/hud_panels.b64").bufferedReader().use { it.readText().trim() }
@@ -27,13 +28,13 @@ class HudPanelRenderer(private val context: Context) {
         val w = bmp.width / 3
         canvas.drawBitmap(bmp, Rect(col*w, 0, (col+1)*w, bmp.height), rect, paint)
         if (id == "hud") drawHudChips(canvas, rect)
+        if (id == "banner") drawBannerFeedback(canvas, rect)
         return true
     }
 
     private fun drawHudChips(canvas: Canvas, rect: RectF) {
         val top = rect.top + rect.height() * .48f
         val bottom = rect.bottom - rect.height() * .08f
-        val h = bottom - top
         val cash = RectF(rect.left + rect.width()*.015f, top, rect.left + rect.width()*.27f, bottom)
         val income = RectF(rect.left + rect.width()*.29f, top, rect.left + rect.width()*.53f, bottom)
         val gem = RectF(rect.left + rect.width()*.55f, top, rect.left + rect.width()*.72f, bottom)
@@ -42,5 +43,11 @@ class HudPanelRenderer(private val context: Context) {
         statChips.draw(canvas, income, "income")
         statChips.draw(canvas, gem, "gem")
         statChips.draw(canvas, prestige, "prestige")
+    }
+
+    private fun drawBannerFeedback(canvas: Canvas, rect: RectF) {
+        val size = rect.height() * .72f
+        val iconRect = RectF(rect.left + rect.height()*.12f, rect.centerY()-size/2f, rect.left + rect.height()*.12f + size, rect.centerY()+size/2f)
+        feedbackIcons.draw(canvas, iconRect, "confirm")
     }
 }
