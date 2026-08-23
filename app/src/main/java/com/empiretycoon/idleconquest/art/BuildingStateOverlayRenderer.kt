@@ -11,6 +11,7 @@ import android.util.Base64
 
 class BuildingStateOverlayRenderer(private val context: Context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+    private val cardStates = BusinessCardStateRenderer(context)
     private val columns = mapOf("milestone_glow" to 0, "milestone_badge" to 1, "selected" to 2, "upgrade_glow" to 3, "upgrade_arrow" to 4)
     private val atlas: Bitmap? by lazy {
         runCatching {
@@ -26,5 +27,10 @@ class BuildingStateOverlayRenderer(private val context: Context) {
         canvas.drawBitmap(bmp,Rect(col*w,0,(col+1)*w,bmp.height),rect,paint)
         return true
     }
-    fun drawMilestone(canvas:Canvas,rect:RectF){draw(canvas,rect,"milestone_glow");val s=rect.width()*.42f;draw(canvas,RectF(rect.centerX()-s/2,rect.top,rect.centerX()+s/2,rect.top+s),"milestone_badge")}
+    fun drawMilestone(canvas:Canvas,rect:RectF){
+        cardStates.draw(canvas,rect,"milestone")
+        draw(canvas,rect,"milestone_glow")
+        val s=rect.width()*.42f
+        draw(canvas,RectF(rect.centerX()-s/2,rect.top,rect.centerX()+s/2,rect.top+s),"milestone_badge")
+    }
 }
