@@ -10,6 +10,7 @@ import android.graphics.RectF
 
 class PermanentUpgradeIconRenderer(private val context: Context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+    private val stateOverlay = CardStateOverlayRenderer(context)
     private val ids = listOf(
         "street_solar_grill",
         "street_bulk_supply",
@@ -40,5 +41,12 @@ class PermanentUpgradeIconRenderer(private val context: Context) {
             (row + 1) * cellHeight
         )
         canvas.drawBitmap(atlas, source, destination, paint)
+        val overlayState = when (state) {
+            "locked" -> "locked"
+            "available" -> "available"
+            "purchased" -> "active"
+            else -> "available"
+        }
+        stateOverlay.draw(canvas, destination, overlayState)
     }
 }
