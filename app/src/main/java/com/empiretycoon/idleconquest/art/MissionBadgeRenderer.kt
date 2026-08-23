@@ -9,10 +9,12 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.util.Base64
 import com.empiretycoon.idleconquest.game.MissionDefinition
+import com.empiretycoon.idleconquest.game.MissionRewardType
 
 class MissionBadgeRenderer(private val context: Context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private val statusBadges = StatusBadgeRenderer(context)
+    private val actionIcons = MissionActionIconRenderer(context)
     private val atlas: Bitmap? by lazy {
         runCatching {
             val encoded = context.assets.open("art/missions/raster/missions_atlas_runtime64.webp.b64")
@@ -47,9 +49,18 @@ class MissionBadgeRenderer(private val context: Context) {
         val cellH = bmp.height / 6
         val src = Rect(col * cellW, row * cellH, (col + 1) * cellW, (row + 1) * cellH)
         c.drawBitmap(bmp, src, r, paint)
+
+        val s = r.width() * .34f
+        val actionRect = RectF(r.right - s, r.top, r.right, r.top + s)
+        when (state) {
+            "locked" -> actionIcons.draw(c, actionRect, "locked")
+            "complete" -> actionIcons.draw(c, actionRect, "claim")
+            else -> actionIcons.draw(c, actionRect, if (m.reward.type == MissionRewardType.CASH) "cash" else "gem")
+        }
+
         if (state == "claimed") {
-            val s = r.width() * .42f
-            statusBadges.draw(c, RectF(r.right - s, r.bottom - s, r.right, r.bottom), "completed")
+            val cs = r.width() * .42f
+            statusBadges.draw(c, RectF(r.right - cs, r.bottom - cs, r.right, r.bottom), "completed")
         }
     }
 }
