@@ -10,6 +10,7 @@ import com.empiretycoon.idleconquest.game.ManagerDefinition
 class ManagerPortraitRenderer(private val context: Context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private val cache = mutableMapOf<String, android.graphics.Bitmap?>()
+    private val stateOverlay = CardStateOverlayRenderer(context)
 
     private fun assetState(state: String): String = when (state) {
         "locked" -> "locked"
@@ -30,5 +31,12 @@ class ManagerPortraitRenderer(private val context: Context) {
 
     fun draw(canvas: Canvas, rect: RectF, manager: ManagerDefinition, state: String) {
         bitmap(manager.id, state)?.let { canvas.drawBitmap(it, null, rect, paint) }
+        val overlayState = when (state) {
+            "locked" -> "locked"
+            "available" -> "available"
+            "hired", "boosted" -> "active"
+            else -> "available"
+        }
+        stateOverlay.draw(canvas, rect, overlayState)
     }
 }
