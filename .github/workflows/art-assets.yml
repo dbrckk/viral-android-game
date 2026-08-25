@@ -32,3 +32,4 @@ jobs:
       - run: python tools/art/validate_permanent_upgrades.py
       - run: python tools/art/validate_missions.py
       - run: python tools/art/validate_prestige.py
+      - run: python tools/art/validate_runtime_assets.py
