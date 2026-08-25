@@ -9,7 +9,9 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        gameView = BusinessShowcaseView(this)
+        gameView = BusinessShowcaseView(this).apply {
+            keepScreenOn = false
+        }
         setContentView(gameView)
     }
 
