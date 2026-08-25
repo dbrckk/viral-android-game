@@ -9,6 +9,7 @@ on:
       - "settings.gradle.kts"
       - "gradle.properties"
       - "assets/art/**"
+      - "tools/art/**"
       - ".github/workflows/android-build.yml"
   pull_request:
     paths:
@@ -17,6 +18,7 @@ on:
       - "settings.gradle.kts"
       - "gradle.properties"
       - "assets/art/**"
+      - "tools/art/**"
       - ".github/workflows/android-build.yml"
 
 permissions:
@@ -44,6 +46,15 @@ jobs:
         run: |
           python tools/art/validate_manifest.py
           python tools/art/validate_group01.py
+          python tools/art/validate_vector_sprites.py
+          python tools/art/validate_managers.py
+          python tools/art/validate_permanent_upgrades.py
+          python tools/art/validate_missions.py
+          python tools/art/validate_prestige.py
+          python tools/art/validate_runtime_assets.py
+
+      - name: Run unit tests
+        run: gradle :app:testDebugUnitTest --stacktrace
 
       - name: Assemble debug APK
         run: gradle :app:assembleDebug --stacktrace
