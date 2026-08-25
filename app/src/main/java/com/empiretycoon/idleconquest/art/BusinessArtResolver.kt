@@ -17,6 +17,8 @@ class BusinessArtResolver(private val context: Context) {
             .bufferedReader()
             .use { JSONObject(it.readText()) }
     }
+    private val selectionCache = mutableMapOf<String, BusinessArtSelection>()
+    private val existenceCache = mutableMapOf<String, Boolean>()
 
     fun resolve(
         businessId: String,
@@ -24,28 +26,31 @@ class BusinessArtResolver(private val context: Context) {
         state: String = "default",
         profile: String = "full"
     ): BusinessArtSelection {
-        val businesses = runtimeIndex.getJSONObject("businesses")
-        val business = businesses.getJSONObject(businessId)
-        val accent = business.optString("accent", "neutral")
-        val layers = runtimeIndex.getJSONArray("layers")
-        val profiles = profileFallbacks(profile)
-        val states = if (state == "default") listOf("default") else listOf(state, "default")
+        val key = "$businessId|$tier|$state|$profile"
+        return selectionCache.getOrPut(key) {
+            val businesses = runtimeIndex.getJSONObject("businesses")
+            val business = businesses.getJSONObject(businessId)
+            val accent = business.optString("accent", "neutral")
+            val layers = runtimeIndex.getJSONArray("layers")
+            val profiles = profileFallbacks(profile)
+            val states = if (state == "default") listOf("default") else listOf(state, "default")
 
-        val paths = buildList {
-            for (layerIndex in 0 until layers.length()) {
-                val layer = layers.getString(layerIndex)
-                val path = firstExistingPath(businessId, tier, states, layer, profiles)
-                if (path != null) add(path)
+            val paths = buildList {
+                for (layerIndex in 0 until layers.length()) {
+                    val layer = layers.getString(layerIndex)
+                    val path = firstExistingPath(businessId, tier, states, layer, profiles)
+                    if (path != null) add(path)
+                }
             }
-        }
 
-        return BusinessArtSelection(
-            businessId = businessId,
-            tier = tier,
-            profile = profile,
-            accent = accent,
-            layerPaths = paths
-        )
+            BusinessArtSelection(
+                businessId = businessId,
+                tier = tier,
+                profile = profile,
+                accent = accent,
+                layerPaths = paths
+            )
+        }
     }
 
     private fun profileFallbacks(profile: String): List<String> = when (profile) {
@@ -71,10 +76,12 @@ class BusinessArtResolver(private val context: Context) {
         return null
     }
 
-    private fun assetExists(path: String): Boolean = try {
-        context.assets.open(path).close()
-        true
-    } catch (_: Exception) {
-        false
+    private fun assetExists(path: String): Boolean = existenceCache.getOrPut(path) {
+        try {
+            context.assets.open(path).close()
+            true
+        } catch (_: Exception) {
+            false
+        }
     }
 }
