@@ -1,8 +1,8 @@
 package com.empiretycoon.idleconquest.game
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class GameStateMilestoneTest {
@@ -17,10 +17,10 @@ class GameStateMilestoneTest {
     }
 
     @Test
-    fun milestoneLookupOnlyTriggersOnExactThreshold() {
-        assertNull(BusinessState.milestoneAt(24))
-        assertNotNull(BusinessState.milestoneAt(25))
-        assertNull(BusinessState.milestoneAt(26))
+    fun milestoneCrossingOnlyTriggersWhenThresholdIsReached() {
+        assertTrue(BusinessState.milestonesCrossed(23, 24).isEmpty())
+        assertEquals(listOf(Milestone(25, 2.0)), BusinessState.milestonesCrossed(24, 25))
+        assertTrue(BusinessState.milestonesCrossed(25, 26).isEmpty())
         assertEquals(100, BusinessState.nextMilestoneAfter(25)?.level)
         assertNull(BusinessState.nextMilestoneAfter(1_000))
     }
