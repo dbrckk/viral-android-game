@@ -26,6 +26,50 @@ class GameStateEconomyTest {
     }
 
     @Test
+    fun maxPurchaseWithInsufficientCashDoesNothing() {
+        val state = GameState()
+        val factoryIndex = state.businesses.indexOfFirst { it.id == "factory" }
+        val beforeCash = state.cash
+        val beforeLevel = state.businesses[factoryIndex].level
+
+        val quote = state.quoteUpgrade(factoryIndex, BuyMode.MAX)
+        assertEquals(0, quote.levels)
+        assertEquals(0.0, quote.cost, 0.0)
+
+        val result = state.upgrade(factoryIndex, BuyMode.MAX)
+        assertFalse(result.upgraded)
+        assertEquals(beforeCash, state.cash, 0.0)
+        assertEquals(beforeLevel, state.businesses[factoryIndex].level)
+    }
+
+    @Test
+    fun invalidBusinessIndexCannotSpendCash() {
+        val state = GameState()
+        val beforeCash = state.cash
+
+        assertFalse(state.canUpgrade(-1, BuyMode.X1))
+        assertFalse(state.canUpgrade(99, BuyMode.MAX))
+        assertFalse(state.upgrade(-1, BuyMode.X1).upgraded)
+        assertFalse(state.upgrade(99, BuyMode.MAX).upgraded)
+        assertEquals(beforeCash, state.cash, 0.0)
+    }
+
+    @Test
+    fun invalidCashGrantsAreIgnored() {
+        val state = GameState()
+        val beforeCash = state.cash
+        val beforeRunEarnings = state.runEarnings
+
+        state.addCash(Double.NaN, true)
+        state.addCash(Double.POSITIVE_INFINITY, true)
+        state.addCash(-100.0, true)
+        state.addCash(0.0, true)
+
+        assertEquals(beforeCash, state.cash, 0.0)
+        assertEquals(beforeRunEarnings, state.runEarnings, 0.0)
+    }
+
+    @Test
     fun managerRequiresUnlockThenAppliesIncomeMultiplier() {
         val state = GameState()
         val manager = ManagerCatalog.all.first { it.id == "mia_flux" }
