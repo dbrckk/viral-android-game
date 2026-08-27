@@ -170,8 +170,11 @@ class GameState {
         this.gems = gems.coerceAtLeast(0)
         this.prestigeCrowns = prestigeCrowns.coerceAtLeast(0)
         this.runEarnings = runEarnings.takeIf { it.isFinite() && it >= 0.0 } ?: 0.0
-        mutableBusinesses.replaceAll {
-            it.copy(level = levels[it.id]?.coerceAtLeast(1) ?: it.level)
+        for (index in mutableBusinesses.indices) {
+            val business = mutableBusinesses[index]
+            mutableBusinesses[index] = business.copy(
+                level = levels[business.id]?.coerceAtLeast(1) ?: business.level
+            )
         }
         hiredManagerIds.clear()
         hiredManagerIds.addAll(hiredManagers.filter { id -> ManagerCatalog.all.any { it.id == id } })
@@ -286,7 +289,10 @@ class GameState {
         prestigeCrowns += quote.crownReward
         cash = 2_500.0
         runEarnings = 0.0
-        mutableBusinesses.replaceAll { it.copy(level = 1) }
+        for (index in mutableBusinesses.indices) {
+            val business = mutableBusinesses[index]
+            mutableBusinesses[index] = business.copy(level = 1)
+        }
         hiredManagerIds.clear()
         return PrestigeResult(true, quote.crownReward, prestigeCrowns, prestigeMultiplier)
     }
