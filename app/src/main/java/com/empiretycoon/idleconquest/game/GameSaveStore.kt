@@ -47,29 +47,35 @@ class GameSaveStore(context:Context){
   return RestoreResult(GameState(),0,0.0)
  }
 
- private fun restorePayload(raw:String,nowEpochMillis:Long):RestoreResult?=try{
-  val j=JSONObject(raw)
-  val schema=j.optInt("schemaVersion",1)
-  if(schema<1||schema>SCHEMA_VERSION)return null
+ private fun restorePayload(raw:String,nowEpochMillis:Long):RestoreResult?{
+  return try{
+   val j=JSONObject(raw)
+   val schema=j.optInt("schemaVersion",1)
+   if(schema<1||schema>SCHEMA_VERSION){
+    null
+   }else{
+    val s=GameState()
+    s.restoreEconomy(
+     finiteOr(j.optDouble("cash",s.cash),s.cash),
+     j.optInt("gems",s.gems),
+     parseLevels(j.optJSONArray("businesses")),
+     parseIds(j.optJSONArray("hiredManagers")),
+     parseIds(j.optJSONArray("permanentUpgrades")),
+     parseIds(j.optJSONArray("claimedMissions")),
+     j.optInt("prestigeCrowns",0),
+     finiteOr(j.optDouble("runEarnings",0.0),0.0)
+    )
 
-  val s=GameState()
-  s.restoreEconomy(
-   finiteOr(j.optDouble("cash",s.cash),s.cash),
-   j.optInt("gems",s.gems),
-   parseLevels(j.optJSONArray("businesses")),
-   parseIds(j.optJSONArray("hiredManagers")),
-   parseIds(j.optJSONArray("permanentUpgrades")),
-   parseIds(j.optJSONArray("claimedMissions")),
-   j.optInt("prestigeCrowns",0),
-   finiteOr(j.optDouble("runEarnings",0.0),0.0)
-  )
-
-  val saved=j.optLong("savedAtEpochMillis",nowEpochMillis)
-  val seconds=min(((nowEpochMillis-saved).coerceAtLeast(0)/1000),MAX_OFFLINE_SECONDS)
-  val earnings=(s.totalIncomePerSecond*seconds).takeIf{it.isFinite()&&it>=0.0}?:0.0
-  s.addCash(earnings,true)
-  RestoreResult(s,seconds,earnings)
- }catch(_:Exception){null}
+    val saved=j.optLong("savedAtEpochMillis",nowEpochMillis)
+    val seconds=min(((nowEpochMillis-saved).coerceAtLeast(0)/1000),MAX_OFFLINE_SECONDS)
+    val earnings=(s.totalIncomePerSecond*seconds).takeIf{it.isFinite()&&it>=0.0}?:0.0
+    s.addCash(earnings,true)
+    RestoreResult(s,seconds,earnings)
+   }
+  }catch(_:Exception){
+   null
+  }
+ }
 
  private fun finiteOr(value:Double,fallback:Double)=if(value.isFinite()&&value>=0.0)value else fallback
 
