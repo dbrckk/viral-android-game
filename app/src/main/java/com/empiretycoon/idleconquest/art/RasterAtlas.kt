@@ -2,23 +2,22 @@ package com.empiretycoon.idleconquest.art
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
-import android.util.Base64
 
-/** Shared loader/drawer for horizontal raster sprite atlases. Supports Base64-wrapped and direct image assets. */
+/** Shared drawer for horizontal raster sprite atlases backed by the process-wide raster asset cache. */
 class RasterAtlas(
-    private val context: Context,
+    context: Context,
     private val assetPath: String,
     private val columnCount: Int,
 ) {
     init { require(columnCount > 0) }
 
+    private val appContext = context.applicationContext
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
-    private val bitmap: Bitmap? by lazy { loadBitmap() }
+    private val bitmap: Bitmap? by lazy { RasterAssetLoader.load(appContext, assetPath) }
 
     fun drawColumn(canvas: Canvas, destination: RectF, column: Int): Boolean {
         val bmp = bitmap ?: return false
@@ -29,14 +28,4 @@ class RasterAtlas(
         canvas.drawBitmap(bmp, src, destination, paint)
         return true
     }
-
-    private fun loadBitmap(): Bitmap? = runCatching {
-        if (assetPath.endsWith(".b64", ignoreCase = true)) {
-            val encoded = context.assets.open(assetPath).bufferedReader().use { it.readText().trim() }
-            val bytes = Base64.decode(encoded, Base64.DEFAULT)
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-        } else {
-            context.assets.open(assetPath).use(BitmapFactory::decodeStream)
-        }
-    }.getOrNull()
 }
