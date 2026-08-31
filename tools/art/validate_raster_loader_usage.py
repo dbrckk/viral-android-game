@@ -2,8 +2,8 @@
 from pathlib import Path
 import sys
 
-ART_DIR = Path("app/src/main/java/com/empiretycoon/idleconquest/art")
-ALLOWED_FILE = "RasterAssetLoader.kt"
+SOURCE_DIR = Path("app/src/main/java/com/empiretycoon/idleconquest")
+ALLOWED_PATH = SOURCE_DIR / "art" / "RasterAssetLoader.kt"
 FORBIDDEN = (
     "android.util.Base64",
     "android.graphics.BitmapFactory",
@@ -12,8 +12,8 @@ FORBIDDEN = (
 )
 
 violations = []
-for path in sorted(ART_DIR.glob("*.kt")):
-    if path.name == ALLOWED_FILE:
+for path in sorted(SOURCE_DIR.rglob("*.kt")):
+    if path == ALLOWED_PATH:
         continue
     text = path.read_text(encoding="utf-8")
     for token in FORBIDDEN:
