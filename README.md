@@ -34,6 +34,7 @@ tools/art/    # art/runtime validators
 - JDK 17
 - Gradle 8.9
 - Android SDK / compileSdk 35
+- minSdk 23
 
 ## Local verification
 
@@ -78,18 +79,22 @@ CI validates:
 
 `Art Assets Validation` runs independently for art-related changes.
 
+## Runtime/performance
+
+The main Canvas view updates at a fixed 50 ms cadence (about 20 FPS), which is appropriate for the current idle-game presentation and avoids continuously redrawing at the display refresh rate. The asset resolver and raster loader cache resolved paths/decoded bitmaps to avoid repeated asset I/O during rendering.
+
 ## Persistence
 
-`GameSaveStore` keeps a primary save and the previous valid payload as a backup. Restore falls back to the backup if the primary payload is invalid or unsupported. Offline earnings are capped at 8 hours.
+`GameSaveStore` keeps a primary save and the previous payload as a backup. Restore falls back to the backup if the primary payload is invalid or unsupported. Offline earnings are capped at 8 hours.
 
 ## Current technical priorities
 
-1. Reduce the continuous redraw rate in `BusinessShowcaseView` from display refresh rate to an idle-game-appropriate cadence.
+1. Keep Android Lint fully green for minSdk 23 and fix all blocking API/resource issues rather than baselining them.
 2. Split `BusinessShowcaseView` into smaller rendering/input responsibilities.
-3. Replace duplicated raster-atlas loading code with a shared atlas loader/renderer.
+3. Continue consolidating raster rendering around the shared loader and remove duplicated decoding code.
 4. Migrate Base64 image assets to direct binary WebP where practical.
 5. Add save-store tests around corruption, backup restore and migration.
-6. Expand content and rebalance progression after the technical foundation is stable.
+6. Expand content and rebalance progression only after the technical foundation remains green in CI.
 
 ## Not yet production-ready
 
