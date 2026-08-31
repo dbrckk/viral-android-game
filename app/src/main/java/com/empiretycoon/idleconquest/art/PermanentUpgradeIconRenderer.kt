@@ -1,8 +1,6 @@
 package com.empiretycoon.idleconquest.art
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
@@ -22,25 +20,24 @@ class PermanentUpgradeIconRenderer(private val context: Context) {
         "factory_predictive_ai"
     )
     private val states = listOf("locked", "available", "purchased")
-    private val atlas: Bitmap by lazy {
-        context.assets.open("art/upgrades/raster/permanent_upgrades_atlas.webp").use {
-            BitmapFactory.decodeStream(it) ?: error("Unable to decode permanent upgrade sprite atlas")
-        }
+    private val atlas by lazy {
+        RasterAssetLoader.load(context, "art/upgrades/raster/permanent_upgrades_atlas.webp")
     }
 
     fun draw(canvas: Canvas, destination: RectF, id: String, state: String) {
+        val bitmap = atlas ?: return
         val column = ids.indexOf(id)
         if (column < 0) return
         val row = states.indexOf(state).takeIf { it >= 0 } ?: 0
-        val cellWidth = atlas.width / ids.size
-        val cellHeight = atlas.height / states.size
+        val cellWidth = bitmap.width / ids.size
+        val cellHeight = bitmap.height / states.size
         val source = Rect(
             column * cellWidth,
             row * cellHeight,
             (column + 1) * cellWidth,
             (row + 1) * cellHeight
         )
-        canvas.drawBitmap(atlas, source, destination, paint)
+        canvas.drawBitmap(bitmap, source, destination, paint)
         val overlayState = when (state) {
             "locked" -> "locked"
             "available" -> "available"
