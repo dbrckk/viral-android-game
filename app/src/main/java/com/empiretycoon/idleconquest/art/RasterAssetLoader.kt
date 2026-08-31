@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
+import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -14,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object RasterAssetLoader {
     private val cache = ConcurrentHashMap<String, Bitmap>()
-    private val failedPaths = ConcurrentHashMap.newKeySet<String>()
+    private val failedPaths = Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
 
     fun load(context: Context, assetPath: String): Bitmap? {
         cache[assetPath]?.let { return it }
