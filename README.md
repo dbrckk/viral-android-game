@@ -54,6 +54,8 @@ app/build/outputs/apk/debug/app-debug.apk
 
 `assets/art` is copied into the Android asset set by the `syncArtAssets` Gradle task before `preBuild`.
 
+Raster decoding is centralized through `RasterAssetLoader`, with `RasterAtlas` providing shared horizontal and grid atlas drawing. CI rejects direct `Base64`/`BitmapFactory` raster decoding elsewhere in the `art` package.
+
 CI validates:
 
 - art manifest/contracts
@@ -66,6 +68,7 @@ CI validates:
 - runtime asset references
 - Base64/WebP payload validity
 - duplicate business raster atlases
+- centralized raster loader usage
 
 ## CI
 
@@ -91,9 +94,9 @@ The main Canvas view updates at a fixed 50 ms cadence (about 20 FPS), which is a
 
 1. Keep Android Lint fully green for minSdk 23 and fix all blocking API/resource issues rather than baselining them.
 2. Split `BusinessShowcaseView` into smaller rendering/input responsibilities.
-3. Continue consolidating raster rendering around the shared loader and remove duplicated decoding code.
-4. Migrate Base64 image assets to direct binary WebP where practical.
-5. Add save-store tests around corruption, backup restore and migration.
+3. Migrate Base64 image assets to direct binary WebP where practical.
+4. Add save-store tests around corruption, backup restore and migration.
+5. Continue reducing renderer-specific layout/state duplication where shared primitives are appropriate.
 6. Expand content and rebalance progression only after the technical foundation remains green in CI.
 
 ## Not yet production-ready
