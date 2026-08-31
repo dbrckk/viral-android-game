@@ -52,6 +52,7 @@ jobs:
           python tools/art/validate_missions.py
           python tools/art/validate_prestige.py
           python tools/art/validate_runtime_assets.py
+          python tools/art/validate_raster_loader_usage.py
 
       - name: Run unit tests
         run: gradle :app:testDebugUnitTest --stacktrace
