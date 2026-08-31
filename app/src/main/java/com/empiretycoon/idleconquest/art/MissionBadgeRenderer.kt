@@ -2,19 +2,19 @@ package com.empiretycoon.idleconquest.art
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Rect
 import android.graphics.RectF
 import com.empiretycoon.idleconquest.game.MissionDefinition
 import com.empiretycoon.idleconquest.game.MissionRewardType
 
-class MissionBadgeRenderer(private val context: Context) {
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+class MissionBadgeRenderer(context: Context) {
     private val statusBadges = StatusBadgeRenderer(context)
     private val actionIcons = MissionActionIconRenderer(context)
-    private val atlas by lazy {
-        RasterAssetLoader.load(context, "art/missions/raster/missions_atlas_runtime64.webp.b64")
-    }
+    private val atlas = RasterAtlas(
+        context,
+        "art/missions/raster/missions_atlas_runtime64.webp.b64",
+        4,
+        6,
+    )
 
     private val missionRows = mapOf(
         "first_25_levels" to 0,
@@ -33,13 +33,9 @@ class MissionBadgeRenderer(private val context: Context) {
     )
 
     fun draw(c: Canvas, r: RectF, m: MissionDefinition, state: String) {
-        val bmp = atlas ?: return
         val row = missionRows[m.id] ?: return
         val col = stateColumns[state] ?: return
-        val cellW = bmp.width / 4
-        val cellH = bmp.height / 6
-        val src = Rect(col * cellW, row * cellH, (col + 1) * cellW, (row + 1) * cellH)
-        c.drawBitmap(bmp, src, r, paint)
+        if (!atlas.drawCell(c, r, col, row)) return
 
         val s = r.width() * .34f
         val actionRect = RectF(r.right - s, r.top, r.right, r.top + s)
