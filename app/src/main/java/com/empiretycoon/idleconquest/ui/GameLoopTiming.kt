@@ -2,14 +2,13 @@ package com.empiretycoon.idleconquest.ui
 
 object GameLoopTiming {
     const val REDRAW_DELAY_MILLIS = 50L
-    const val MAX_FRAME_DELTA_SECONDS = 0.25
     const val AUTOSAVE_INTERVAL_NANOS = 10_000_000_000L
 
     fun frameDeltaSeconds(nowNanos: Long, previousNanos: Long): Double {
         if (previousNanos == 0L || nowNanos <= previousNanos) return 0.0
         val elapsedNanos = runCatching { Math.subtractExact(nowNanos, previousNanos) }
             .getOrDefault(Long.MAX_VALUE)
-        return (elapsedNanos / 1_000_000_000.0).coerceIn(0.0, MAX_FRAME_DELTA_SECONDS)
+        return (elapsedNanos / 1_000_000_000.0).coerceAtLeast(0.0)
     }
 
     fun shouldAutosave(nowNanos: Long, lastSaveNanos: Long): Boolean {
