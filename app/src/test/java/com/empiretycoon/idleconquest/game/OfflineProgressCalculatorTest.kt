@@ -46,4 +46,16 @@ class OfflineProgressCalculatorTest {
         assertEquals(OfflineProgressCalculator.MAX_OFFLINE_SECONDS, result.seconds)
         assertEquals(OfflineProgressCalculator.MAX_OFFLINE_SECONDS.toDouble(), result.earnings, 0.0)
     }
+
+    @Test
+    fun finiteIncomeOverflowSaturatesInsteadOfDroppingProgress() {
+        val result = OfflineProgressCalculator.calculate(
+            nowEpochMillis = OfflineProgressCalculator.MAX_OFFLINE_SECONDS * 1_000L,
+            savedAtEpochMillis = 0L,
+            incomePerSecond = Double.MAX_VALUE,
+        )
+
+        assertEquals(OfflineProgressCalculator.MAX_OFFLINE_SECONDS, result.seconds)
+        assertEquals(Double.MAX_VALUE, result.earnings, 0.0)
+    }
 }
