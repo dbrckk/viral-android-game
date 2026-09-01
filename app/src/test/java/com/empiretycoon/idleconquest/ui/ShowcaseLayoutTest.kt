@@ -35,6 +35,45 @@ class ShowcaseLayoutTest {
     }
 
     @Test
+    fun safeAreaKeepsInteractiveLayoutInsideSystemInsets() {
+        val safeArea = UiBounds(
+            left = 24f,
+            top = 96f,
+            right = 976f,
+            bottom = 1_880f,
+        )
+        val layout = ShowcaseLayout.frame(safeArea, bannerVisible = true, businessCount = 4)
+
+        assertTrue(layout.hud.left >= safeArea.left)
+        assertTrue(layout.hud.top >= safeArea.top)
+        assertTrue(layout.hud.right <= safeArea.right)
+        assertTrue(layout.businessCards.last().bottom <= safeArea.bottom)
+        layout.businessCards.forEach { card ->
+            assertTrue(card.left >= safeArea.left)
+            assertTrue(card.right <= safeArea.right)
+        }
+    }
+
+    @Test
+    fun safeAreaOffsetsLayoutInsteadOfShrinkingTowardScreenOrigin() {
+        val base = ShowcaseLayout.frame(
+            UiBounds(0f, 0f, 900f, 1_600f),
+            bannerVisible = false,
+            businessCount = 4,
+        )
+        val shifted = ShowcaseLayout.frame(
+            UiBounds(30f, 80f, 930f, 1_680f),
+            bannerVisible = false,
+            businessCount = 4,
+        )
+
+        assertEquals(30f, shifted.hud.left - base.hud.left, 0.001f)
+        assertEquals(80f, shifted.hud.top - base.hud.top, 0.001f)
+        assertEquals(30f, shifted.businessCards.first().left - base.businessCards.first().left, 0.001f)
+        assertEquals(80f, shifted.businessCards.first().top - base.businessCards.first().top, 0.001f)
+    }
+
+    @Test
     fun denseBusinessStacksRemainBounded() {
         val layout = ShowcaseLayout.frame(480, 800, false, 100)
 
