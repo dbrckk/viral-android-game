@@ -60,20 +60,26 @@ class UiInteractionController(private val gameState: GameState) {
     }
 
     fun permanentUpgrade(id: String): UiInteractionResult {
+        val upgradeState = gameState.permanentUpgrades.firstOrNull { it.definition.id == id } ?: return UiInteractionResult()
+        val upgrade = upgradeState.definition
+        val businessLevel = gameState.businesses.firstOrNull { it.id == upgrade.businessId }?.level ?: 0
         val result = gameState.buyPermanentUpgrade(id)
         if (result.purchased) {
-            val upgrade = result.upgrade ?: return UiInteractionResult()
+            val purchasedUpgrade = result.upgrade ?: return UiInteractionResult()
             return UiInteractionResult(
-                message = "PERMANENT UPGRADE! ${upgrade.name}",
+                message = "PERMANENT UPGRADE! ${purchasedUpgrade.name}",
                 durationNanos = DURATION_SUCCESS,
                 saveRequired = true,
             )
         }
-        val upgrade = PermanentUpgradeCatalog.all.firstOrNull { it.id == id } ?: return UiInteractionResult()
-        return UiInteractionResult(
-            message = "${upgrade.name} • Lv.${upgrade.unlockLevel} • $${UiNumberFormatter.compact(upgrade.cost)}",
-            durationNanos = DURATION_INFO,
-        )
+
+        val message = when {
+            upgradeState.purchased -> "${upgrade.name} ALREADY PURCHASED"
+            businessLevel < upgrade.unlockLevel -> "${upgrade.name} • UNLOCK Lv.${upgrade.unlockLevel}"
+            gameState.cash < upgrade.cost -> "${upgrade.name} • NEED $${UiNumberFormatter.compact(upgrade.cost)} • NOW $${UiNumberFormatter.compact(gameState.cash)}"
+            else -> "${upgrade.name} UNAVAILABLE"
+        }
+        return UiInteractionResult(message = message, durationNanos = DURATION_INFO)
     }
 
     fun manager(id: String): UiInteractionResult {
