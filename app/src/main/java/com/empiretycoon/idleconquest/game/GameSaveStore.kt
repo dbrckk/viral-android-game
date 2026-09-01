@@ -15,7 +15,7 @@ class GameSaveStore(context:Context){
   val permanent=JSONArray().apply{state.purchasedPermanentUpgrades().forEach{put(it)}}
   val missions=JSONArray().apply{state.claimedMissions().forEach{put(it)}}
   val payload=JSONObject().apply{
-   put("schemaVersion",SCHEMA_VERSION)
+   put("schemaVersion",GameSaveRestorer.CURRENT_SCHEMA_VERSION)
    put("cash",state.cash)
    put("gems",state.gems)
    put("prestigeCrowns",state.prestigeCrowns)
@@ -29,7 +29,7 @@ class GameSaveStore(context:Context){
 
   val previous=prefs.getString(KEY_SAVE,null)
   prefs.edit().apply{
-   if(previous!=null)putString(KEY_BACKUP,previous)
+   if(previous!=null&&restorePayload(previous,nowEpochMillis)!=null)putString(KEY_BACKUP,previous)
    putString(KEY_SAVE,payload)
   }.apply()
  }
@@ -49,36 +49,29 @@ class GameSaveStore(context:Context){
   return RestoreResult(GameState(),0,0.0)
  }
 
- private fun restorePayload(raw:String,nowEpochMillis:Long):RestoreResult?{
+ private fun restorePayload(raw:String,nowEpochMillis:Long):RestoreResult?=
+  decodeSnapshot(raw,nowEpochMillis)?.let{GameSaveRestorer.restore(it,nowEpochMillis)}
+
+ private fun decodeSnapshot(raw:String,nowEpochMillis:Long):GameSaveSnapshot?{
   return try{
    val j=JSONObject(raw)
-   val schema=j.optInt("schemaVersion",1)
-   if(schema<1||schema>SCHEMA_VERSION){
-    null
-   }else{
-    val s=GameState()
-    s.restoreEconomy(
-     finiteOr(j.optDouble("cash",s.cash),s.cash),
-     j.optInt("gems",s.gems),
-     parseLevels(j.optJSONArray("businesses")),
-     parseIds(j.optJSONArray("hiredManagers")),
-     parseIds(j.optJSONArray("permanentUpgrades")),
-     parseIds(j.optJSONArray("claimedMissions")),
-     j.optInt("prestigeCrowns",0),
-     finiteOr(j.optDouble("runEarnings",0.0),0.0)
-    )
-
-    val saved=j.optLong("savedAtEpochMillis",nowEpochMillis)
-    val offline=OfflineProgressCalculator.calculate(nowEpochMillis,saved,s.totalIncomePerSecond)
-    s.addCash(offline.earnings,true)
-    RestoreResult(s,offline.seconds,offline.earnings)
-   }
+   val defaults=GameState()
+   GameSaveSnapshot(
+    schemaVersion=j.optInt("schemaVersion",1),
+    cash=j.optDouble("cash",defaults.cash),
+    gems=j.optInt("gems",defaults.gems),
+    levels=parseLevels(j.optJSONArray("businesses")),
+    hiredManagers=parseIds(j.optJSONArray("hiredManagers")),
+    permanentUpgrades=parseIds(j.optJSONArray("permanentUpgrades")),
+    claimedMissions=parseIds(j.optJSONArray("claimedMissions")),
+    prestigeCrowns=j.optInt("prestigeCrowns",0),
+    runEarnings=j.optDouble("runEarnings",0.0),
+    savedAtEpochMillis=j.optLong("savedAtEpochMillis",nowEpochMillis)
+   )
   }catch(_:Exception){
    null
   }
  }
-
- private fun finiteOr(value:Double,fallback:Double)=if(value.isFinite()&&value>=0.0)value else fallback
 
  private fun parseLevels(a:JSONArray?):Map<String,Int>{
   if(a==null)return emptyMap()
@@ -105,6 +98,5 @@ class GameSaveStore(context:Context){
   private const val PREFS_NAME="empire_tycoon_save"
   private const val KEY_SAVE="game_state_v1"
   private const val KEY_BACKUP="game_state_backup_v1"
-  private const val SCHEMA_VERSION=5
  }
 }
