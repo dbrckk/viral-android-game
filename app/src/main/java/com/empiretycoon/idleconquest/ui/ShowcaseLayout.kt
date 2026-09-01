@@ -24,7 +24,7 @@ object ShowcaseLayout {
     ): ShowcaseFrameLayout {
         val safeWidth = width.coerceAtLeast(0)
         val safeHeight = height.coerceAtLeast(0)
-        val margin = safeWidth * .04f
+        val margin = minOf(safeWidth, safeHeight) * .04f
         val hudHeight = safeHeight * .09f
         val modeHeight = safeHeight * .045f
         val missionHeight = safeHeight * .07f
