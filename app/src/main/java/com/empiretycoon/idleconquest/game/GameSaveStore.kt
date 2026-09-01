@@ -29,7 +29,7 @@ class GameSaveStore(context:Context){
 
   val previous=prefs.getString(KEY_SAVE,null)
   prefs.edit().apply{
-   if(previous!=null&&restorePayload(previous,nowEpochMillis)!=null)putString(KEY_BACKUP,previous)
+   if(previous!=null&&isSupportedPayload(previous,nowEpochMillis))putString(KEY_BACKUP,previous)
    putString(KEY_SAVE,payload)
   }.apply()
  }
@@ -51,6 +51,9 @@ class GameSaveStore(context:Context){
 
  private fun restorePayload(raw:String,nowEpochMillis:Long):RestoreResult?=
   decodeSnapshot(raw,nowEpochMillis)?.let{GameSaveRestorer.restore(it,nowEpochMillis)}
+
+ private fun isSupportedPayload(raw:String,nowEpochMillis:Long):Boolean=
+  decodeSnapshot(raw,nowEpochMillis)?.schemaVersion in 1..GameSaveRestorer.CURRENT_SCHEMA_VERSION
 
  private fun decodeSnapshot(raw:String,nowEpochMillis:Long):GameSaveSnapshot?{
   return try{
