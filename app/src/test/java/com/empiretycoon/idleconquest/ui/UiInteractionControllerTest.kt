@@ -72,4 +72,53 @@ class UiInteractionControllerTest {
         assertFalse(result.saveRequired)
         assertNull(result.message)
     }
+
+    @Test
+    fun availableManagerHireRequestsSaveAndMutatesState() {
+        val state = GameState()
+        state.restoreEconomy(
+            cash = 10_000.0,
+            gems = 12,
+            levels = mapOf("street_stand" to 25),
+        )
+
+        val result = UiInteractionController(state).manager("mia_flux")
+
+        assertTrue(result.saveRequired)
+        assertTrue(result.message!!.startsWith("MANAGER HIRED!"))
+        assertTrue(state.managerFor("street_stand")!!.hired)
+    }
+
+    @Test
+    fun availablePermanentUpgradeRequestsSaveAndMutatesState() {
+        val state = GameState()
+        state.restoreEconomy(
+            cash = 10_000.0,
+            gems = 12,
+            levels = mapOf("street_stand" to 25),
+        )
+
+        val result = UiInteractionController(state).permanentUpgrade("street_solar_grill")
+
+        assertTrue(result.saveRequired)
+        assertTrue(result.message!!.startsWith("PERMANENT UPGRADE!"))
+        assertTrue("street_solar_grill" in state.purchasedPermanentUpgrades())
+    }
+
+    @Test
+    fun completedMissionClaimRequestsSaveAndAppliesReward() {
+        val state = GameState()
+        state.restoreEconomy(
+            cash = 2_500.0,
+            gems = 12,
+            levels = mapOf("street_stand" to 22),
+        )
+
+        val result = UiInteractionController(state).mission("first_25_levels")
+
+        assertTrue(result.saveRequired)
+        assertTrue(result.message!!.startsWith("MISSION COMPLETE!"))
+        assertEquals(5_000.0, state.cash, 0.0)
+        assertTrue("first_25_levels" in state.claimedMissions())
+    }
 }
