@@ -15,8 +15,13 @@ class MainActivity : Activity() {
         setContentView(gameView)
     }
 
+    override fun onResume() {
+        super.onResume()
+        gameView.resumeFromBackground()
+    }
+
     override fun onPause() {
-        gameView.persistNow()
+        gameView.pauseForBackground()
         super.onPause()
     }
 
