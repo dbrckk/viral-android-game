@@ -24,9 +24,4 @@ class MainActivity : Activity() {
         gameView.pauseForBackground()
         super.onPause()
     }
-
-    override fun onStop() {
-        gameView.persistNow()
-        super.onStop()
-    }
 }
