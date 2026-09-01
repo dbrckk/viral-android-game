@@ -45,7 +45,20 @@ data class BusinessState(
         if (!first.isFinite() || first <= 0.0) return 0
         val estimate = ln(1 + cash * (COST_GROWTH - 1) / first) / ln(COST_GROWTH)
         if (!estimate.isFinite() || estimate <= 0.0) return 0
-        return floor(estimate + 1e-10).toInt().coerceAtLeast(0)
+
+        var candidate = floor(estimate).toInt().coerceAtLeast(1)
+        while (candidate > 0) {
+            val cost = upgradeCost(count = candidate) * costMultiplier
+            if (cost.isFinite() && cost <= cash) break
+            candidate--
+        }
+        while (candidate < Int.MAX_VALUE) {
+            val nextCandidate = candidate + 1
+            val nextCost = upgradeCost(count = nextCandidate) * costMultiplier
+            if (!nextCost.isFinite() || nextCost > cash) break
+            candidate = nextCandidate
+        }
+        return candidate
     }
 
     companion object {
