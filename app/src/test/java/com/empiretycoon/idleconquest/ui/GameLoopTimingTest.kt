@@ -23,9 +23,9 @@ class GameLoopTimingTest {
     }
 
     @Test
-    fun longFrameDeltaIsCapped() {
+    fun longForegroundFrameDeltaIsPreserved() {
         assertEquals(
-            GameLoopTiming.MAX_FRAME_DELTA_SECONDS,
+            9.0,
             GameLoopTiming.frameDeltaSeconds(10_000_000_000L, 1_000_000_000L),
             0.0,
         )
