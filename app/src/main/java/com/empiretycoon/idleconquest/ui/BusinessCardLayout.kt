@@ -17,46 +17,57 @@ data class BusinessCardGeometry(
 
 object BusinessCardLayout {
     fun calculate(card: UiBounds, permanentUpgradeCount: Int = 2): BusinessCardGeometry {
-        val width = card.right - card.left
-        val height = card.bottom - card.top
-        val inset = 10f
+        val width = (card.right - card.left).coerceAtLeast(0f)
+        val height = (card.bottom - card.top).coerceAtLeast(0f)
+        val horizontalInset = minOf(10f, width / 2f)
+        val verticalInset = minOf(10f, height / 2f)
         val contentLeft = card.left + width * .28f
-        val rightColumnLeft = card.right - width * .19f
+        val rightColumnLeft = card.left + width * .81f
         val statIconSize = height * .085f
 
+        val artLeft = card.left + horizontalInset
         val art = UiBounds(
-            card.left + inset,
-            card.top + inset,
-            card.left + width * .24f,
-            card.bottom - inset,
+            artLeft,
+            card.top + verticalInset,
+            maxOf(artLeft, card.left + width * .24f),
+            maxOf(card.top + verticalInset, card.top + height - verticalInset),
         )
+        val managerTop = card.top + verticalInset
         val manager = UiBounds(
             rightColumnLeft,
-            card.top + inset,
-            card.right - inset,
-            card.top + height * .45f,
+            managerTop,
+            maxOf(rightColumnLeft, card.left + width - horizontalInset),
+            maxOf(managerTop, card.top + height * .45f),
         )
 
         val safeUpgradeCount = permanentUpgradeCount.coerceAtLeast(0)
         val upgradeGap = 5f
         val upgradesTop = card.top + height * .49f
-        val availableHeight = card.bottom - inset - upgradesTop
+        val upgradesBottom = (card.top + height - verticalInset).coerceAtLeast(upgradesTop)
+        val availableHeight = upgradesBottom - upgradesTop
         val totalGaps = upgradeGap * (safeUpgradeCount - 1).coerceAtLeast(0)
         val slotHeight = if (safeUpgradeCount > 0) {
-            (availableHeight - totalGaps) / safeUpgradeCount
+            ((availableHeight - totalGaps) / safeUpgradeCount).coerceAtLeast(0f)
         } else {
             0f
         }
         val permanentUpgradeSlots = List(safeUpgradeCount) { index ->
             val top = upgradesTop + index * (slotHeight + upgradeGap)
-            UiBounds(rightColumnLeft, top, card.right - inset, top + slotHeight)
+            UiBounds(
+                rightColumnLeft,
+                top,
+                maxOf(rightColumnLeft, card.left + width - horizontalInset),
+                top + slotHeight,
+            )
         }
 
+        val upgradeTop = card.top + height * .78f
+        val upgradeRight = maxOf(contentLeft, rightColumnLeft - minOf(8f, width * .02f))
         val upgradeButton = UiBounds(
             contentLeft,
-            card.bottom - height * .22f,
-            rightColumnLeft - 8f,
-            card.bottom - inset,
+            upgradeTop,
+            upgradeRight,
+            maxOf(upgradeTop, card.top + height - verticalInset),
         )
 
         return BusinessCardGeometry(
