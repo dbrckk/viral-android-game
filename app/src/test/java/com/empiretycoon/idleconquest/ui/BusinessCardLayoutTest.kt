@@ -32,6 +32,21 @@ class BusinessCardLayoutTest {
     }
 
     @Test
+    fun densePermanentUpgradeLayoutsStayInsideCard() {
+        val layout = BusinessCardLayout.calculate(card, permanentUpgradeCount = 100)
+
+        assertEquals(100, layout.permanentUpgradeSlots.size)
+        layout.permanentUpgradeSlots.forEach { bounds ->
+            assertTrue(bounds.top >= card.top)
+            assertTrue(bounds.bottom <= card.bottom)
+            assertTrue(bounds.bottom >= bounds.top)
+        }
+        layout.permanentUpgradeSlots.zipWithNext().forEach { (first, second) ->
+            assertTrue(second.top >= first.bottom)
+        }
+    }
+
+    @Test
     fun textAnchorsMatchCurrentCardProportions() {
         val layout = BusinessCardLayout.calculate(card)
         val height = card.bottom - card.top
