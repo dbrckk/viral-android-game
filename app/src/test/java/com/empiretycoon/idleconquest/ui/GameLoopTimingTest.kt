@@ -32,6 +32,13 @@ class GameLoopTimingTest {
     }
 
     @Test
+    fun elapsedTimeOverflowStaysFiniteAndPositive() {
+        val delta = GameLoopTiming.frameDeltaSeconds(Long.MAX_VALUE, Long.MIN_VALUE + 1)
+        assertTrue(delta.isFinite())
+        assertTrue(delta > 0.0)
+    }
+
+    @Test
     fun autosaveRunsImmediatelyThenAtConfiguredInterval() {
         assertTrue(GameLoopTiming.shouldAutosave(1L, 0L))
         assertFalse(GameLoopTiming.shouldAutosave(10_999_999_999L, 1_000_000_000L))
@@ -41,5 +48,10 @@ class GameLoopTimingTest {
     @Test
     fun backwardsClockDoesNotTriggerAutosave() {
         assertFalse(GameLoopTiming.shouldAutosave(999L, 1_000L))
+    }
+
+    @Test
+    fun autosaveOverflowCountsAsElapsedInterval() {
+        assertTrue(GameLoopTiming.shouldAutosave(Long.MAX_VALUE, Long.MIN_VALUE + 1))
     }
 }
