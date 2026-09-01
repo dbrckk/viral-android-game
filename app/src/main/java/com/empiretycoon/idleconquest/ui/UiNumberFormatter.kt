@@ -12,6 +12,6 @@ object UiNumberFormatter {
     }
 
     fun multiplier(value: Double): String =
-        if (value % 1.0 == 0.0) value.toInt().toString()
+        if (value % 1.0 == 0.0) String.format(Locale.US, "%.0f", value)
         else String.format(Locale.US, "%.2f", value)
 }
