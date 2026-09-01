@@ -19,7 +19,7 @@ class UiInteractionController(private val gameState: GameState) {
         if (!quote.available) {
             return UiInteractionResult(
                 message = "PRESTIGE AT $${UiNumberFormatter.compact(quote.requirement)} RUN EARNINGS • NOW ${UiNumberFormatter.compact(gameState.runEarnings)}",
-                durationNanos = 4_000_000_000L,
+                durationNanos = DURATION_PROGRESS,
             )
         }
 
@@ -27,7 +27,7 @@ class UiInteractionController(private val gameState: GameState) {
         if (!result.prestiged) return UiInteractionResult()
         return UiInteractionResult(
             message = "PRESTIGE! +${result.crownsEarned} CROWN • EMPIRE ×${UiNumberFormatter.multiplier(result.multiplier)}",
-            durationNanos = 6_000_000_000L,
+            durationNanos = DURATION_PRESTIGE,
             saveRequired = true,
             clearHighlight = true,
         )
@@ -47,7 +47,7 @@ class UiInteractionController(private val gameState: GameState) {
                 }
                 return UiInteractionResult(
                     message = "MISSION COMPLETE! ${mission.title} +$rewardText",
-                    durationNanos = 5_000_000_000L,
+                    durationNanos = DURATION_SUCCESS,
                     saveRequired = true,
                 )
             }
@@ -55,23 +55,24 @@ class UiInteractionController(private val gameState: GameState) {
 
         return UiInteractionResult(
             message = "${state.definition.title} ${UiNumberFormatter.compact(state.progress)}/${UiNumberFormatter.compact(state.definition.target)}",
-            durationNanos = 3_000_000_000L,
+            durationNanos = DURATION_INFO,
         )
     }
 
     fun permanentUpgrade(id: String): UiInteractionResult {
         val result = gameState.buyPermanentUpgrade(id)
         if (result.purchased) {
+            val upgrade = result.upgrade ?: return UiInteractionResult()
             return UiInteractionResult(
-                message = "PERMANENT UPGRADE! ${result.upgrade!!.name}",
-                durationNanos = 5_000_000_000L,
+                message = "PERMANENT UPGRADE! ${upgrade.name}",
+                durationNanos = DURATION_SUCCESS,
                 saveRequired = true,
             )
         }
         val upgrade = PermanentUpgradeCatalog.all.firstOrNull { it.id == id } ?: return UiInteractionResult()
         return UiInteractionResult(
             message = "${upgrade.name} • Lv.${upgrade.unlockLevel} • $${UiNumberFormatter.compact(upgrade.cost)}",
-            durationNanos = 3_000_000_000L,
+            durationNanos = DURATION_INFO,
         )
     }
 
@@ -81,7 +82,7 @@ class UiInteractionController(private val gameState: GameState) {
         val manager = result.manager ?: return UiInteractionResult()
         return UiInteractionResult(
             message = "MANAGER HIRED! ${manager.name} ×${UiNumberFormatter.multiplier(manager.incomeMultiplier)}",
-            durationNanos = 5_000_000_000L,
+            durationNanos = DURATION_SUCCESS,
             saveRequired = true,
         )
     }
@@ -94,12 +95,19 @@ class UiInteractionController(private val gameState: GameState) {
         return if (milestone != null) {
             UiInteractionResult(
                 message = "MILESTONE! ${before.displayName} Lv.${milestone.level} ×${UiNumberFormatter.multiplier(milestone.multiplier)}",
-                durationNanos = 5_000_000_000L,
+                durationNanos = DURATION_SUCCESS,
                 saveRequired = true,
                 highlightBusinessId = before.id,
             )
         } else {
             UiInteractionResult(saveRequired = true)
         }
+    }
+
+    companion object {
+        const val DURATION_INFO = 3_000_000_000L
+        const val DURATION_PROGRESS = 4_000_000_000L
+        const val DURATION_SUCCESS = 5_000_000_000L
+        const val DURATION_PRESTIGE = 6_000_000_000L
     }
 }
