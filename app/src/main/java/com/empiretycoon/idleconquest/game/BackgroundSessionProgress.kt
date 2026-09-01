@@ -4,8 +4,10 @@ class BackgroundSessionProgress {
     private var pausedAtEpochMillis: Long? = null
 
     fun markPaused(nowEpochMillis: Long) {
-        pausedAtEpochMillis = nowEpochMillis
+        if (pausedAtEpochMillis == null) pausedAtEpochMillis = nowEpochMillis
     }
+
+    fun saveTimestamp(nowEpochMillis: Long): Long = pausedAtEpochMillis ?: nowEpochMillis
 
     fun consumeResume(nowEpochMillis: Long, incomePerSecond: Double): OfflineProgress? {
         val pausedAt = pausedAtEpochMillis ?: return null
