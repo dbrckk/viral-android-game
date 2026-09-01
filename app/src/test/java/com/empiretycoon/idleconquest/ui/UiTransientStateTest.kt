@@ -46,4 +46,13 @@ class UiTransientStateTest {
 
         assertEquals("SAFE", state.bannerAt(Long.MAX_VALUE - 1L))
     }
+
+    @Test
+    fun negativeNanoTimeOriginRemainsValid() {
+        val state = UiTransientState()
+        state.showBanner("NEGATIVE", 100L, -1_000L)
+
+        assertEquals("NEGATIVE", state.bannerAt(-950L))
+        assertNull(state.bannerAt(-900L))
+    }
 }
