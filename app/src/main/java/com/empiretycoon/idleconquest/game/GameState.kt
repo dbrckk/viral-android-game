@@ -153,7 +153,7 @@ class GameState {
 
     fun addGems(amount: Int) {
         if (amount <= 0) return
-        gems = (gems.toLong() + amount.toLong()).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        gems = saturatingAddInt(gems, amount)
     }
 
     fun restoreEconomy(
@@ -188,13 +188,16 @@ class GameState {
 
     fun quoteUpgrade(index: Int, mode: BuyMode): UpgradeQuote {
         val business = mutableBusinesses.getOrNull(index) ?: return UpgradeQuote(0, 0.0)
+        val remainingCapacity = Int.MAX_VALUE - business.level
+        if (remainingCapacity <= 0) return UpgradeQuote(0, 0.0)
         val costMultiplier = permanentCostMultiplier(business.id)
-        val levels = when (mode) {
+        val requestedLevels = when (mode) {
             BuyMode.X1 -> 1
             BuyMode.X10 -> 10
             BuyMode.X25 -> 25
             BuyMode.MAX -> business.maxAffordableLevels(cash, costMultiplier)
         }
+        val levels = minOf(requestedLevels, remainingCapacity)
         val cost = business.upgradeCost(count = levels) * costMultiplier
         return if (levels > 0 && cost.isFinite() && cost >= 0.0) {
             UpgradeQuote(levels, cost)
@@ -211,11 +214,11 @@ class GameState {
         val quote = quoteUpgrade(index, mode)
         if (quote.levels <= 0 || quote.cost > cash || !quote.cost.isFinite()) return UpgradeResult(false)
         cash -= quote.cost
-        val newLevel = business.level + quote.levels
+        val newLevel = saturatingAddInt(business.level, quote.levels)
         mutableBusinesses[index] = business.copy(level = newLevel)
         return UpgradeResult(
             true,
-            quote.levels,
+            newLevel - business.level,
             quote.cost,
             BusinessState.milestonesCrossed(business.level, newLevel)
         )
@@ -251,7 +254,7 @@ class GameState {
     }
 
     fun missionProgress(mission: MissionDefinition): Double = when (mission.metric) {
-        MissionMetric.TOTAL_LEVELS -> businesses.sumOf { it.level }.toDouble()
+        MissionMetric.TOTAL_LEVELS -> businesses.sumOf { it.level.toLong() }.toDouble()
         MissionMetric.BUSINESS_LEVEL ->
             businesses.firstOrNull { it.id == mission.businessId }?.level?.toDouble() ?: 0.0
         MissionMetric.INCOME_PER_SECOND -> totalIncomePerSecond
@@ -274,11 +277,12 @@ class GameState {
 
     fun prestigeQuote(): PrestigeQuote {
         val reward = PrestigeRules.crownsFor(runEarnings)
+        val nextCrowns = saturatingAddInt(prestigeCrowns, reward)
         return PrestigeQuote(
             reward > 0,
             reward,
             prestigeCrowns,
-            PrestigeRules.multiplier(prestigeCrowns + reward),
+            PrestigeRules.multiplier(nextCrowns),
             PrestigeRules.BASE_REQUIREMENT
         )
     }
@@ -286,7 +290,7 @@ class GameState {
     fun prestige(): PrestigeResult {
         val quote = prestigeQuote()
         if (!quote.available) return PrestigeResult(false)
-        prestigeCrowns += quote.crownReward
+        prestigeCrowns = saturatingAddInt(prestigeCrowns, quote.crownReward)
         cash = 2_500.0
         runEarnings = 0.0
         for (index in mutableBusinesses.indices) {
@@ -314,4 +318,7 @@ class GameState {
         val result = current + amount
         return if (result.isFinite()) result else Double.MAX_VALUE
     }
+
+    private fun saturatingAddInt(current: Int, amount: Int): Int =
+        (current.toLong() + amount.toLong()).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
 }
