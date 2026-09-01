@@ -19,9 +19,18 @@ object OfflineProgressCalculator {
                 .getOrDefault(Long.MAX_VALUE)
         }
         val seconds = (elapsedMillis / 1_000L).coerceIn(0L, MAX_OFFLINE_SECONDS)
-        val earnings = (incomePerSecond * seconds)
-            .takeIf { incomePerSecond.isFinite() && incomePerSecond >= 0.0 && it.isFinite() && it >= 0.0 }
-            ?: 0.0
+        val earnings = when {
+            !incomePerSecond.isFinite() || incomePerSecond < 0.0 -> 0.0
+            seconds == 0L || incomePerSecond == 0.0 -> 0.0
+            else -> {
+                val raw = incomePerSecond * seconds
+                when {
+                    raw.isFinite() && raw >= 0.0 -> raw
+                    raw == Double.POSITIVE_INFINITY -> Double.MAX_VALUE
+                    else -> 0.0
+                }
+            }
+        }
         return OfflineProgress(seconds, earnings)
     }
 }
