@@ -115,26 +115,49 @@ class GameState {
         }
     val prestigeMultiplier: Double get() = PrestigeRules.multiplier(prestigeCrowns)
 
-    fun managerFor(businessId: String) = managers.firstOrNull { it.definition.businessId == businessId }
+    fun managerFor(businessId: String): ManagerState? {
+        val definition = ManagerCatalog.all.firstOrNull { it.businessId == businessId } ?: return null
+        return ManagerState(definition, definition.id in hiredManagerIds)
+    }
 
-    fun managerMultiplier(businessId: String) =
-        managerFor(businessId)?.takeIf { it.hired }?.definition?.incomeMultiplier ?: 1.0
+    fun managerMultiplier(businessId: String): Double {
+        val manager = ManagerCatalog.all.firstOrNull { it.businessId == businessId } ?: return 1.0
+        return if (manager.id in hiredManagerIds) manager.incomeMultiplier else 1.0
+    }
 
-    fun permanentIncomeMultiplier(businessId: String) = PermanentUpgradeCatalog.all
-        .filter {
-            it.businessId == businessId &&
-                it.id in purchasedPermanentUpgradeIds &&
-                it.effect == PermanentUpgradeEffect.INCOME_MULTIPLIER
+    fun permanentUpgradesFor(businessId: String): List<PermanentUpgradeState> =
+        PermanentUpgradeCatalog.all.asSequence()
+            .filter { it.businessId == businessId }
+            .map { PermanentUpgradeState(it, it.id in purchasedPermanentUpgradeIds) }
+            .toList()
+
+    fun permanentIncomeMultiplier(businessId: String): Double {
+        var multiplier = 1.0
+        for (upgrade in PermanentUpgradeCatalog.all) {
+            if (
+                upgrade.businessId == businessId &&
+                upgrade.id in purchasedPermanentUpgradeIds &&
+                upgrade.effect == PermanentUpgradeEffect.INCOME_MULTIPLIER
+            ) {
+                multiplier *= upgrade.value
+            }
         }
-        .fold(1.0) { accumulator, upgrade -> accumulator * upgrade.value }
+        return multiplier
+    }
 
-    fun permanentCostMultiplier(businessId: String) = PermanentUpgradeCatalog.all
-        .filter {
-            it.businessId == businessId &&
-                it.id in purchasedPermanentUpgradeIds &&
-                it.effect == PermanentUpgradeEffect.COST_MULTIPLIER
+    fun permanentCostMultiplier(businessId: String): Double {
+        var multiplier = 1.0
+        for (upgrade in PermanentUpgradeCatalog.all) {
+            if (
+                upgrade.businessId == businessId &&
+                upgrade.id in purchasedPermanentUpgradeIds &&
+                upgrade.effect == PermanentUpgradeEffect.COST_MULTIPLIER
+            ) {
+                multiplier *= upgrade.value
+            }
         }
-        .fold(1.0) { accumulator, upgrade -> accumulator * upgrade.value }
+        return multiplier
+    }
 
     fun incomeFor(business: BusinessState): Double {
         val income = business.rawIncomePerSecond *
