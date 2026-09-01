@@ -49,6 +49,17 @@ class ShowcaseLayoutTest {
     }
 
     @Test
+    fun veryWideViewportUsesHeightBoundedMargin() {
+        val layout = ShowcaseLayout.frame(2_400, 400, false, 4)
+
+        assertEquals(16f, layout.hud.left, 0.001f)
+        assertEquals(2_384f, layout.hud.right, 0.001f)
+        assertTrue(layout.businessCards.first().top < 400f)
+        assertTrue(layout.businessCards.last().bottom <= 400f)
+        layout.businessCards.forEach { card -> assertTrue(card.bottom >= card.top) }
+    }
+
+    @Test
     fun zeroBusinessesReturnsNoCards() {
         val layout = ShowcaseLayout.frame(1_000, 2_000, false, 0)
         assertTrue(layout.businessCards.isEmpty())
