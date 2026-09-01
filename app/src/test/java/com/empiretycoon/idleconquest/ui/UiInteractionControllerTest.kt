@@ -16,6 +16,7 @@ class UiInteractionControllerTest {
 
         assertFalse(result.saveRequired)
         assertFalse(result.clearHighlight)
+        assertEquals(UiInteractionController.DURATION_PROGRESS, result.durationNanos)
         assertTrue(result.message!!.startsWith("PRESTIGE AT "))
     }
 
@@ -33,6 +34,7 @@ class UiInteractionControllerTest {
 
         assertTrue(result.saveRequired)
         assertTrue(result.clearHighlight)
+        assertEquals(UiInteractionController.DURATION_PRESTIGE, result.durationNanos)
         assertEquals(1, state.prestigeCrowns)
         assertEquals(1, state.businesses.first().level)
         assertEquals(0.0, state.runEarnings, 0.0)
@@ -61,6 +63,7 @@ class UiInteractionControllerTest {
 
         assertTrue(result.saveRequired)
         assertEquals("street_stand", result.highlightBusinessId)
+        assertEquals(UiInteractionController.DURATION_SUCCESS, result.durationNanos)
         assertTrue(result.message!!.contains("Lv.25"))
     }
 
@@ -120,5 +123,29 @@ class UiInteractionControllerTest {
         assertTrue(result.message!!.startsWith("MISSION COMPLETE!"))
         assertEquals(5_000.0, state.cash, 0.0)
         assertTrue("first_25_levels" in state.claimedMissions())
+    }
+
+    @Test
+    fun invalidTargetsAreNoOps() {
+        val state = GameState()
+        val controller = UiInteractionController(state)
+        val cashBefore = state.cash
+
+        val results = listOf(
+            controller.manager("missing_manager"),
+            controller.permanentUpgrade("missing_upgrade"),
+            controller.mission("missing_mission"),
+            controller.businessUpgrade(-1, BuyMode.X1),
+            controller.businessUpgrade(Int.MAX_VALUE, BuyMode.MAX),
+        )
+
+        results.forEach { result ->
+            assertFalse(result.saveRequired)
+            assertFalse(result.clearHighlight)
+            assertNull(result.highlightBusinessId)
+            assertNull(result.message)
+            assertEquals(0L, result.durationNanos)
+        }
+        assertEquals(cashBefore, state.cash, 0.0)
     }
 }
