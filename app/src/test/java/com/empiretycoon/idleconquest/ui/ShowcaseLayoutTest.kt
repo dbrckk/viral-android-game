@@ -1,0 +1,42 @@
+package com.empiretycoon.idleconquest.ui
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class ShowcaseLayoutTest {
+    @Test
+    fun frameWithoutBannerBuildsFourNonOverlappingCards() {
+        val layout = ShowcaseLayout.frame(
+            width = 1_000,
+            height = 2_000,
+            bannerVisible = false,
+            businessCount = 4,
+        )
+
+        assertNull(layout.banner)
+        assertEquals(4, layout.businessCards.size)
+        assertEquals(40f, layout.hud.left, 0f)
+        assertEquals(960f, layout.hud.right, 0f)
+        for (index in 1 until layout.businessCards.size) {
+            assertTrue(layout.businessCards[index].top > layout.businessCards[index - 1].bottom)
+        }
+        assertTrue(layout.businessCards.last().bottom <= 2_000f)
+    }
+
+    @Test
+    fun visibleBannerPushesBusinessCardsDownByBannerHeight() {
+        val hidden = ShowcaseLayout.frame(1_000, 2_000, false, 4)
+        val visible = ShowcaseLayout.frame(1_000, 2_000, true, 4)
+
+        assertEquals(76f, visible.banner!!.bottom - visible.banner.top, 0.001f)
+        assertEquals(76f, visible.businessCards.first().top - hidden.businessCards.first().top, 0.001f)
+    }
+
+    @Test
+    fun zeroBusinessesReturnsNoCards() {
+        val layout = ShowcaseLayout.frame(1_000, 2_000, false, 0)
+        assertTrue(layout.businessCards.isEmpty())
+    }
+}
