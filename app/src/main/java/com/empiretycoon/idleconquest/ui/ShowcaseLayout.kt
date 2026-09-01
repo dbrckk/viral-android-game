@@ -45,17 +45,24 @@ object ShowcaseLayout {
         }
 
         val cardsTop = margin + hudHeight + modeHeight + missionHeight + margin + bannerHeight
-        val gap = margin * .4f
         val safeCount = businessCount.coerceAtLeast(0)
-        val totalGaps = gap * (safeCount - 1).coerceAtLeast(0)
+        val availableHeight = (safeHeight - cardsTop - margin).coerceAtLeast(0f)
+        val gapCount = (safeCount - 1).coerceAtLeast(0)
+        val preferredGap = margin * .4f
+        val gap = if (gapCount > 0) {
+            minOf(preferredGap, availableHeight / gapCount)
+        } else {
+            0f
+        }
+        val totalGaps = gap * gapCount
         val cardHeight = if (safeCount > 0) {
-            ((safeHeight - cardsTop - margin - totalGaps) / safeCount).coerceAtLeast(0f)
+            ((availableHeight - totalGaps) / safeCount).coerceAtLeast(0f)
         } else {
             0f
         }
         val businessCards = List(safeCount) { index ->
             val top = cardsTop + index * (cardHeight + gap)
-            UiBounds(margin, top, right, top + cardHeight)
+            UiBounds(margin, top, right, minOf(safeHeight - margin, top + cardHeight))
         }
 
         return ShowcaseFrameLayout(hud, modes, missions, banner, businessCards)
