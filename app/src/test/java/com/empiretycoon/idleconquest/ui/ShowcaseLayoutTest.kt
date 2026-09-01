@@ -35,6 +35,20 @@ class ShowcaseLayoutTest {
     }
 
     @Test
+    fun denseBusinessStacksRemainBounded() {
+        val layout = ShowcaseLayout.frame(480, 800, false, 100)
+
+        assertEquals(100, layout.businessCards.size)
+        layout.businessCards.forEach { card ->
+            assertTrue(card.bottom >= card.top)
+            assertTrue(card.bottom <= 800f)
+        }
+        layout.businessCards.zipWithNext().forEach { (first, second) ->
+            assertTrue(second.top >= first.bottom)
+        }
+    }
+
+    @Test
     fun zeroBusinessesReturnsNoCards() {
         val layout = ShowcaseLayout.frame(1_000, 2_000, false, 0)
         assertTrue(layout.businessCards.isEmpty())
