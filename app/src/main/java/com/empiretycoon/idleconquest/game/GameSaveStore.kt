@@ -3,7 +3,6 @@ package com.empiretycoon.idleconquest.game
 import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
-import kotlin.math.min
 
 data class RestoreResult(val state:GameState,val offlineSeconds:Long,val offlineEarnings:Double)
 
@@ -67,10 +66,9 @@ class GameSaveStore(context:Context){
     )
 
     val saved=j.optLong("savedAtEpochMillis",nowEpochMillis)
-    val seconds=min(((nowEpochMillis-saved).coerceAtLeast(0)/1000),MAX_OFFLINE_SECONDS)
-    val earnings=(s.totalIncomePerSecond*seconds).takeIf{it.isFinite()&&it>=0.0}?:0.0
-    s.addCash(earnings,true)
-    RestoreResult(s,seconds,earnings)
+    val offline=OfflineProgressCalculator.calculate(nowEpochMillis,saved,s.totalIncomePerSecond)
+    s.addCash(offline.earnings,true)
+    RestoreResult(s,offline.seconds,offline.earnings)
    }
   }catch(_:Exception){
    null
@@ -105,6 +103,5 @@ class GameSaveStore(context:Context){
   private const val KEY_SAVE="game_state_v1"
   private const val KEY_BACKUP="game_state_backup_v1"
   private const val SCHEMA_VERSION=5
-  private const val MAX_OFFLINE_SECONDS=8L*60*60
  }
 }
