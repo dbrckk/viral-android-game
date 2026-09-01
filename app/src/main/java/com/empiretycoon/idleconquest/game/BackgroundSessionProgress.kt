@@ -1,0 +1,23 @@
+package com.empiretycoon.idleconquest.game
+
+class BackgroundSessionProgress {
+    private var pausedAtEpochMillis: Long? = null
+
+    fun markPaused(nowEpochMillis: Long) {
+        if (pausedAtEpochMillis == null) {
+            pausedAtEpochMillis = nowEpochMillis
+        }
+    }
+
+    fun saveTimestamp(nowEpochMillis: Long): Long = pausedAtEpochMillis ?: nowEpochMillis
+
+    fun consumeResume(nowEpochMillis: Long, incomePerSecond: Double): OfflineProgress? {
+        val pausedAt = pausedAtEpochMillis ?: return null
+        pausedAtEpochMillis = null
+        return OfflineProgressCalculator.calculate(
+            nowEpochMillis = nowEpochMillis,
+            savedAtEpochMillis = pausedAt,
+            incomePerSecond = incomePerSecond,
+        )
+    }
+}
