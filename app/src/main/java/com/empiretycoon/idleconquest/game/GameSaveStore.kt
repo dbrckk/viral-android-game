@@ -41,7 +41,10 @@ class GameSaveStore(context:Context){
   }
   val backup=prefs.getString(KEY_BACKUP,null)
   if(backup!=null){
-   restorePayload(backup,nowEpochMillis)?.let{return it}
+   restorePayload(backup,nowEpochMillis)?.let{
+    prefs.edit().putString(KEY_SAVE,backup).apply()
+    return it
+   }
   }
   return RestoreResult(GameState(),0,0.0)
  }
