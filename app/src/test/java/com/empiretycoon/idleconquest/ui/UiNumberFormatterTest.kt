@@ -32,4 +32,10 @@ class UiNumberFormatterTest {
         assertEquals("1.50", UiNumberFormatter.multiplier(1.5))
         assertEquals("1.75", UiNumberFormatter.multiplier(1.75))
     }
+
+    @Test
+    fun multiplierDoesNotClampLargeWholeNumbersToIntRange() {
+        assertEquals("3000000000", UiNumberFormatter.multiplier(3_000_000_000.0))
+        assertEquals("1000000000000", UiNumberFormatter.multiplier(1_000_000_000_000.0))
+    }
 }
