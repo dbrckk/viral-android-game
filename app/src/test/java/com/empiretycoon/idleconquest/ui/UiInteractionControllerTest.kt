@@ -51,6 +51,20 @@ class UiInteractionControllerTest {
     }
 
     @Test
+    fun blockedBusinessUpgradeExplainsMissingCash() {
+        val state = GameState()
+        state.restoreEconomy(cash = 0.0, gems = 12, levels = emptyMap())
+
+        val result = UiInteractionController(state).businessUpgrade(0, BuyMode.X1)
+
+        assertFalse(result.saveRequired)
+        assertEquals(UiInteractionController.DURATION_INFO, result.durationNanos)
+        assertTrue(result.message!!.contains("NEED $"))
+        assertTrue(result.message!!.contains("NOW $0"))
+        assertEquals(1, state.businesses[0].level)
+    }
+
+    @Test
     fun milestoneUpgradeReturnsHighlightAndMessage() {
         val state = GameState()
         state.restoreEconomy(
@@ -68,12 +82,29 @@ class UiInteractionControllerTest {
     }
 
     @Test
-    fun lockedManagerDoesNotSaveOrShowSuccess() {
+    fun lockedManagerExplainsUnlockRequirement() {
         val state = GameState()
         val result = UiInteractionController(state).manager("mia_flux")
 
         assertFalse(result.saveRequired)
-        assertNull(result.message)
+        assertEquals(UiInteractionController.DURATION_INFO, result.durationNanos)
+        assertEquals("Mia Flux • UNLOCK Lv.15", result.message)
+    }
+
+    @Test
+    fun unlockedManagerWithoutCashExplainsCost() {
+        val state = GameState()
+        state.restoreEconomy(
+            cash = 100.0,
+            gems = 12,
+            levels = mapOf("street_stand" to 15),
+        )
+
+        val result = UiInteractionController(state).manager("mia_flux")
+
+        assertFalse(result.saveRequired)
+        assertTrue(result.message!!.contains("NEED $750"))
+        assertTrue(result.message!!.contains("NOW $100"))
     }
 
     @Test
@@ -90,6 +121,22 @@ class UiInteractionControllerTest {
         assertTrue(result.saveRequired)
         assertTrue(result.message!!.startsWith("MANAGER HIRED!"))
         assertTrue(state.managerFor("street_stand")!!.hired)
+    }
+
+    @Test
+    fun alreadyHiredManagerExplainsStateWithoutSaving() {
+        val state = GameState()
+        state.restoreEconomy(
+            cash = 10_000.0,
+            gems = 12,
+            levels = mapOf("street_stand" to 25),
+            hiredManagers = setOf("mia_flux"),
+        )
+
+        val result = UiInteractionController(state).manager("mia_flux")
+
+        assertFalse(result.saveRequired)
+        assertEquals("Mia Flux ALREADY HIRED", result.message)
     }
 
     @Test
