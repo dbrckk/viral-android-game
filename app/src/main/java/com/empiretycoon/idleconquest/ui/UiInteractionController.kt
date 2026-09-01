@@ -77,20 +77,41 @@ class UiInteractionController(private val gameState: GameState) {
     }
 
     fun manager(id: String): UiInteractionResult {
+        val managerState = gameState.managers.firstOrNull { it.definition.id == id } ?: return UiInteractionResult()
+        val manager = managerState.definition
+        val businessLevel = gameState.businesses.firstOrNull { it.id == manager.businessId }?.level ?: 0
         val result = gameState.hire(id)
-        if (!result.hired) return UiInteractionResult()
-        val manager = result.manager ?: return UiInteractionResult()
-        return UiInteractionResult(
-            message = "MANAGER HIRED! ${manager.name} ×${UiNumberFormatter.multiplier(manager.incomeMultiplier)}",
-            durationNanos = DURATION_SUCCESS,
-            saveRequired = true,
-        )
+        if (result.hired) {
+            val hiredManager = result.manager ?: return UiInteractionResult()
+            return UiInteractionResult(
+                message = "MANAGER HIRED! ${hiredManager.name} ×${UiNumberFormatter.multiplier(hiredManager.incomeMultiplier)}",
+                durationNanos = DURATION_SUCCESS,
+                saveRequired = true,
+            )
+        }
+
+        val message = when {
+            managerState.hired -> "${manager.name} ALREADY HIRED"
+            businessLevel < manager.unlockLevel -> "${manager.name} • UNLOCK Lv.${manager.unlockLevel}"
+            gameState.cash < manager.cost -> "HIRE ${manager.name} • NEED $${UiNumberFormatter.compact(manager.cost)} • NOW $${UiNumberFormatter.compact(gameState.cash)}"
+            else -> "HIRE ${manager.name} UNAVAILABLE"
+        }
+        return UiInteractionResult(message = message, durationNanos = DURATION_INFO)
     }
 
     fun businessUpgrade(index: Int, mode: BuyMode): UiInteractionResult {
         val before = gameState.businesses.getOrNull(index) ?: return UiInteractionResult()
+        val requestedQuote = gameState.quoteUpgrade(index, mode)
         val result = gameState.upgrade(index, mode)
-        if (!result.upgraded) return UiInteractionResult()
+        if (!result.upgraded) {
+            val fallbackQuote = if (requestedQuote.levels > 0) requestedQuote else gameState.quoteUpgrade(index, BuyMode.X1)
+            val message = if (fallbackQuote.levels > 0 && fallbackQuote.cost > 0.0) {
+                "UPGRADE ${before.displayName} • NEED $${UiNumberFormatter.compact(fallbackQuote.cost)} • NOW $${UiNumberFormatter.compact(gameState.cash)}"
+            } else {
+                "UPGRADE ${before.displayName} UNAVAILABLE"
+            }
+            return UiInteractionResult(message = message, durationNanos = DURATION_INFO)
+        }
         val milestone = result.reachedMilestones.lastOrNull()
         return if (milestone != null) {
             UiInteractionResult(
