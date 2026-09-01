@@ -140,6 +140,32 @@ class UiInteractionControllerTest {
     }
 
     @Test
+    fun lockedPermanentUpgradeExplainsUnlockRequirement() {
+        val state = GameState()
+
+        val result = UiInteractionController(state).permanentUpgrade("street_solar_grill")
+
+        assertFalse(result.saveRequired)
+        assertEquals("Solar Grill • UNLOCK Lv.25", result.message)
+    }
+
+    @Test
+    fun unlockedPermanentUpgradeWithoutCashExplainsCost() {
+        val state = GameState()
+        state.restoreEconomy(
+            cash = 100.0,
+            gems = 12,
+            levels = mapOf("street_stand" to 25),
+        )
+
+        val result = UiInteractionController(state).permanentUpgrade("street_solar_grill")
+
+        assertFalse(result.saveRequired)
+        assertTrue(result.message!!.contains("NEED $5.00K"))
+        assertTrue(result.message!!.contains("NOW $100"))
+    }
+
+    @Test
     fun availablePermanentUpgradeRequestsSaveAndMutatesState() {
         val state = GameState()
         state.restoreEconomy(
@@ -153,6 +179,22 @@ class UiInteractionControllerTest {
         assertTrue(result.saveRequired)
         assertTrue(result.message!!.startsWith("PERMANENT UPGRADE!"))
         assertTrue("street_solar_grill" in state.purchasedPermanentUpgrades())
+    }
+
+    @Test
+    fun alreadyPurchasedPermanentUpgradeExplainsStateWithoutSaving() {
+        val state = GameState()
+        state.restoreEconomy(
+            cash = 10_000.0,
+            gems = 12,
+            levels = mapOf("street_stand" to 25),
+            permanentUpgrades = setOf("street_solar_grill"),
+        )
+
+        val result = UiInteractionController(state).permanentUpgrade("street_solar_grill")
+
+        assertFalse(result.saveRequired)
+        assertEquals("Solar Grill ALREADY PURCHASED", result.message)
     }
 
     @Test
