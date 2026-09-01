@@ -29,7 +29,7 @@ class UiTransientState {
 
     private fun safeDeadline(nowNanos: Long, durationNanos: Long): Long {
         val safeDuration = durationNanos.coerceAtLeast(0L)
-        return if (Long.MAX_VALUE - nowNanos < safeDuration) Long.MAX_VALUE
+        return if (nowNanos > Long.MAX_VALUE - safeDuration) Long.MAX_VALUE
         else nowNanos + safeDuration
     }
 }
