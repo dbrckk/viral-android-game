@@ -41,11 +41,17 @@ object BusinessCardLayout {
         )
 
         val safeUpgradeCount = permanentUpgradeCount.coerceAtLeast(0)
-        val upgradeGap = 5f
+        val preferredUpgradeGap = 5f
         val upgradesTop = card.top + height * .49f
         val upgradesBottom = (card.top + height - verticalInset).coerceAtLeast(upgradesTop)
         val availableHeight = upgradesBottom - upgradesTop
-        val totalGaps = upgradeGap * (safeUpgradeCount - 1).coerceAtLeast(0)
+        val gapCount = (safeUpgradeCount - 1).coerceAtLeast(0)
+        val upgradeGap = if (gapCount > 0) {
+            minOf(preferredUpgradeGap, availableHeight / gapCount)
+        } else {
+            0f
+        }
+        val totalGaps = upgradeGap * gapCount
         val slotHeight = if (safeUpgradeCount > 0) {
             ((availableHeight - totalGaps) / safeUpgradeCount).coerceAtLeast(0f)
         } else {
@@ -57,7 +63,7 @@ object BusinessCardLayout {
                 rightColumnLeft,
                 top,
                 maxOf(rightColumnLeft, card.left + width - horizontalInset),
-                top + slotHeight,
+                minOf(upgradesBottom, top + slotHeight),
             )
         }
 
