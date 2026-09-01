@@ -1,6 +1,7 @@
 package com.empiretycoon.idleconquest.game
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -13,13 +14,15 @@ class GameSaveRestorerTest {
     }
 
     @Test
-    fun restoresEconomyAndKnownCatalogIds() {
+    fun restoresEconomyAndKnownCatalogIdsWhileFilteringUnknownIds() {
         val result = GameSaveRestorer.restore(
             snapshot(
                 cash = 9_000.0,
                 gems = 42,
                 levels = mapOf("street_stand" to 25, "unknown" to 999),
-                hiredManagers = setOf("manager_street_stand", "unknown"),
+                hiredManagers = setOf("mia_flux", "unknown_manager"),
+                permanentUpgrades = setOf("street_solar_grill", "unknown_upgrade"),
+                claimedMissions = setOf("first_25_levels", "unknown_mission"),
                 prestigeCrowns = 3,
                 runEarnings = 123.0,
             ),
@@ -32,7 +35,12 @@ class GameSaveRestorerTest {
         assertTrue(result.state.businesses.none { it.id == "unknown" })
         assertEquals(3, result.state.prestigeCrowns)
         assertEquals(123.0, result.state.runEarnings, 0.0)
-        assertTrue(result.state.hiredManagers().all { id -> ManagerCatalog.all.any { it.id == id } })
+        assertTrue("mia_flux" in result.state.hiredManagers())
+        assertFalse("unknown_manager" in result.state.hiredManagers())
+        assertTrue("street_solar_grill" in result.state.purchasedPermanentUpgrades())
+        assertFalse("unknown_upgrade" in result.state.purchasedPermanentUpgrades())
+        assertTrue("first_25_levels" in result.state.claimedMissions())
+        assertFalse("unknown_mission" in result.state.claimedMissions())
     }
 
     @Test
@@ -46,6 +54,17 @@ class GameSaveRestorerTest {
         assertEquals(0, result.state.gems)
         assertEquals(0, result.state.prestigeCrowns)
         assertEquals(0.0, result.state.runEarnings, 0.0)
+    }
+
+    @Test
+    fun invalidBusinessLevelsAreClampedToPlayableMinimum() {
+        val result = GameSaveRestorer.restore(
+            snapshot(levels = mapOf("street_stand" to Int.MIN_VALUE, "corner_shop" to 0)),
+            nowEpochMillis = 0L,
+        )!!
+
+        assertEquals(1, result.state.businesses.first { it.id == "street_stand" }.level)
+        assertEquals(1, result.state.businesses.first { it.id == "corner_shop" }.level)
     }
 
     @Test
