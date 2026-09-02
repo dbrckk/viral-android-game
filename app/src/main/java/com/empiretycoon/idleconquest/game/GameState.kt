@@ -312,8 +312,10 @@ class GameState {
     }
 
     fun prestigeQuote(): PrestigeQuote {
-        val reward = PrestigeRules.crownsFor(runEarnings)
-        val nextCrowns = saturatingAddInt(prestigeCrowns, reward)
+        val calculatedReward = PrestigeRules.crownsFor(runEarnings)
+        val remainingCapacity = Int.MAX_VALUE - prestigeCrowns
+        val reward = minOf(calculatedReward, remainingCapacity.coerceAtLeast(0))
+        val nextCrowns = prestigeCrowns + reward
         return PrestigeQuote(
             reward > 0,
             reward,
