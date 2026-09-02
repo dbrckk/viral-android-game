@@ -61,8 +61,8 @@ jobs:
       - name: Run unit tests
         run: gradle :app:testDebugUnitTest --stacktrace
 
-      - name: Run Android lint
-        run: gradle :app:lintDebug --stacktrace
+      - name: Run release Android lint
+        run: gradle :app:lintRelease --stacktrace
 
       - name: Assemble debug APK
         run: gradle :app:assembleDebug --stacktrace
@@ -94,9 +94,9 @@ jobs:
           path: app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
 
-      - name: Upload lint report
+      - name: Upload release lint report
         uses: actions/upload-artifact@v4
         with:
-          name: empire-tycoon-lint-report
-          path: app/build/reports/lint-results-debug.html
+          name: empire-tycoon-release-lint-report
+          path: app/build/reports/lint-results-release.html
           if-no-files-found: error
