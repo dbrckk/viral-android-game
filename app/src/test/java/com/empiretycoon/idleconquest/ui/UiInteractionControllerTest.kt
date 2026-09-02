@@ -2,6 +2,7 @@ package com.empiretycoon.idleconquest.ui
 
 import com.empiretycoon.idleconquest.game.BuyMode
 import com.empiretycoon.idleconquest.game.GameState
+import com.empiretycoon.idleconquest.game.PrestigeRules
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -18,6 +19,28 @@ class UiInteractionControllerTest {
         assertFalse(result.clearHighlight)
         assertEquals(UiInteractionController.DURATION_PROGRESS, result.durationNanos)
         assertTrue(result.message!!.startsWith("PRESTIGE AT "))
+    }
+
+    @Test
+    fun crownCapPrestigeExplainsCapWithoutResettingRun() {
+        val state = GameState()
+        val runEarnings = PrestigeRules.BASE_REQUIREMENT * 100.0
+        state.restoreEconomy(
+            cash = 50_000.0,
+            gems = 12,
+            levels = mapOf("street_stand" to 100),
+            prestigeCrowns = Int.MAX_VALUE,
+            runEarnings = runEarnings,
+        )
+
+        val result = UiInteractionController(state).prestige()
+
+        assertFalse(result.saveRequired)
+        assertFalse(result.clearHighlight)
+        assertEquals(UiInteractionController.DURATION_INFO, result.durationNanos)
+        assertEquals("PRESTIGE CROWN CAP REACHED", result.message)
+        assertEquals(100, state.businesses.first().level)
+        assertEquals(runEarnings, state.runEarnings, 0.0)
     }
 
     @Test
