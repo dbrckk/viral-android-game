@@ -31,6 +31,16 @@ class UiTransientStateTest {
     }
 
     @Test
+    fun newerBannerReplacesTextAndDeadline() {
+        val state = UiTransientState()
+        state.showBanner("FIRST", 1_000L, 100L)
+        state.showBanner("SECOND", 50L, 200L)
+
+        assertEquals("SECOND", state.bannerAt(249L))
+        assertNull(state.bannerAt(250L))
+    }
+
+    @Test
     fun clearHighlightStopsItImmediately() {
         val state = UiTransientState()
         state.highlightBusiness("factory", 1_000L, 10L)
@@ -40,11 +50,22 @@ class UiTransientStateTest {
     }
 
     @Test
+    fun negativeDurationExpiresImmediately() {
+        val state = UiTransientState()
+        state.showBanner("INVALID", -100L, 500L)
+        state.highlightBusiness("corner_shop", -100L, 500L)
+
+        assertNull(state.bannerAt(500L))
+        assertFalse(state.isHighlighted("corner_shop", 500L))
+    }
+
+    @Test
     fun deadlineSaturatesInsteadOfOverflowing() {
         val state = UiTransientState()
         state.showBanner("SAFE", 100L, Long.MAX_VALUE - 10L)
 
         assertEquals("SAFE", state.bannerAt(Long.MAX_VALUE - 1L))
+        assertNull(state.bannerAt(Long.MAX_VALUE))
     }
 
     @Test
