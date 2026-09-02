@@ -139,7 +139,7 @@ class GameState {
                 upgrade.id in purchasedPermanentUpgradeIds &&
                 upgrade.effect == PermanentUpgradeEffect.INCOME_MULTIPLIER
             ) {
-                multiplier *= upgrade.value
+                multiplier = safeMultiply(multiplier, upgrade.value)
             }
         }
         return multiplier
@@ -153,30 +153,33 @@ class GameState {
                 upgrade.id in purchasedPermanentUpgradeIds &&
                 upgrade.effect == PermanentUpgradeEffect.COST_MULTIPLIER
             ) {
-                multiplier *= upgrade.value
+                multiplier = safeMultiply(multiplier, upgrade.value)
             }
         }
         return multiplier
     }
 
     fun incomeFor(business: BusinessState): Double {
-        val income = business.rawIncomePerSecond *
-            managerMultiplier(business.id) *
-            permanentIncomeMultiplier(business.id) *
-            prestigeMultiplier
-        return income.takeIf { it.isFinite() && it >= 0.0 } ?: 0.0
+        var income = finiteNonNegativeOrSaturated(business.rawIncomePerSecond)
+        income = safeMultiply(income, managerMultiplier(business.id))
+        income = safeMultiply(income, permanentIncomeMultiplier(business.id))
+        income = safeMultiply(income, prestigeMultiplier)
+        return income
     }
 
     val totalIncomePerSecond: Double
         get() {
-            val total = mutableBusinesses.sumOf { incomeFor(it) }
-            return total.takeIf { it.isFinite() && it >= 0.0 } ?: 0.0
+            var total = 0.0
+            for (business in mutableBusinesses) {
+                total = safeAdd(total, incomeFor(business))
+            }
+            return total
         }
 
     fun tick(deltaSeconds: Double) {
         if (!deltaSeconds.isFinite() || deltaSeconds <= 0.0) return
-        val earned = totalIncomePerSecond * deltaSeconds
-        if (!earned.isFinite() || earned <= 0.0) return
+        val earned = safeMultiply(totalIncomePerSecond, deltaSeconds)
+        if (earned <= 0.0) return
         cash = safeAdd(cash, earned)
         runEarnings = safeAdd(runEarnings, earned)
     }
@@ -350,6 +353,19 @@ class GameState {
         level >= 100 -> "lv100"
         level >= 25 -> "lv25"
         else -> "base"
+    }
+
+    private fun finiteNonNegativeOrSaturated(value: Double): Double = when {
+        value.isNaN() || value < 0.0 -> 0.0
+        value == Double.POSITIVE_INFINITY -> Double.MAX_VALUE
+        else -> value
+    }
+
+    private fun safeMultiply(left: Double, right: Double): Double {
+        if (left <= 0.0 || right <= 0.0 || left.isNaN() || right.isNaN()) return 0.0
+        if (left == Double.POSITIVE_INFINITY || right == Double.POSITIVE_INFINITY) return Double.MAX_VALUE
+        val result = left * right
+        return if (result.isFinite()) result else Double.MAX_VALUE
     }
 
     private fun safeAdd(current: Double, amount: Double): Double {
