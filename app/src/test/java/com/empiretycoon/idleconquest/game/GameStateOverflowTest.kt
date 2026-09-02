@@ -104,4 +104,28 @@ class GameStateOverflowTest {
         assertFalse(state.canUpgrade(0, BuyMode.X1))
         assertEquals(0, state.quoteUpgrade(0, BuyMode.MAX).levels)
     }
+
+    @Test
+    fun overflowingBusinessIncomeSaturatesInsteadOfDroppingToZero() {
+        val state = GameState()
+        val overflowing = BusinessState(
+            id = "overflow_business",
+            displayName = "Overflow Business",
+            level = Int.MAX_VALUE,
+            baseCost = 1.0,
+            baseIncomePerSecond = Double.MAX_VALUE,
+        )
+
+        assertEquals(Double.MAX_VALUE, state.incomeFor(overflowing), 0.0)
+    }
+
+    @Test
+    fun overflowingTickSaturatesCashAndRunEarnings() {
+        val state = GameState()
+
+        state.tick(Double.MAX_VALUE)
+
+        assertEquals(Double.MAX_VALUE, state.cash, 0.0)
+        assertEquals(Double.MAX_VALUE, state.runEarnings, 0.0)
+    }
 }
