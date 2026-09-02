@@ -11,7 +11,9 @@ import java.util.concurrent.ConcurrentHashMap
  * Centralized loader for raster assets.
  *
  * Supports the legacy Base64-wrapped WebP files as well as direct binary raster files.
- * Successfully decoded bitmaps are cached by asset path for the lifetime of the process.
+ * Successfully decoded bitmaps are cached by asset path and may be released under Android
+ * memory pressure. Atlas drawers request them through this loader instead of retaining a
+ * second strong reference.
  */
 object RasterAssetLoader {
     private val cache = ConcurrentHashMap<String, Bitmap>()
@@ -40,5 +42,9 @@ object RasterAssetLoader {
 
         failedPaths += assetPath
         return null
+    }
+
+    fun clearMemoryCache() {
+        cache.clear()
     }
 }
