@@ -9,18 +9,31 @@ class UiTouchTargetResolverTest {
     private val box = UiBounds(10f, 20f, 30f, 40f)
 
     @Test
-    fun `bounds include their edges`() {
+    fun `left and top edges are included while right and bottom are excluded`() {
         val map = UiTouchMap(prestige = box)
 
         assertEquals(UiTouchTarget.Prestige, UiTouchTargetResolver.resolve(10f, 20f, map))
-        assertEquals(UiTouchTarget.Prestige, UiTouchTargetResolver.resolve(30f, 40f, map))
+        assertEquals(UiTouchTarget.Prestige, UiTouchTargetResolver.resolve(29.999f, 39.999f, map))
+        assertNull(UiTouchTargetResolver.resolve(30f, 30f, map))
+        assertNull(UiTouchTargetResolver.resolve(20f, 40f, map))
     }
 
     @Test
-    fun `reversed bounds are still hittable`() {
-        val map = UiTouchMap(prestige = UiBounds(30f, 40f, 10f, 20f))
-
-        assertEquals(UiTouchTarget.Prestige, UiTouchTargetResolver.resolve(20f, 30f, map))
+    fun `empty or reversed bounds are not hittable`() {
+        assertNull(
+            UiTouchTargetResolver.resolve(
+                20f,
+                30f,
+                UiTouchMap(prestige = UiBounds(30f, 40f, 10f, 20f)),
+            ),
+        )
+        assertNull(
+            UiTouchTargetResolver.resolve(
+                10f,
+                20f,
+                UiTouchMap(prestige = UiBounds(10f, 20f, 10f, 40f)),
+            ),
+        )
     }
 
     @Test
