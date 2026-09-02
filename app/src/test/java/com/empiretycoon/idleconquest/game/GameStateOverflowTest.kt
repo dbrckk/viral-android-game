@@ -32,12 +32,40 @@ class GameStateOverflowTest {
 
         val quote = state.prestigeQuote()
         assertTrue(quote.available)
+        assertEquals(1, quote.crownReward)
         assertTrue(quote.nextMultiplier > 1.0)
 
         val result = state.prestige()
         assertTrue(result.prestiged)
+        assertEquals(1, result.crownsEarned)
         assertEquals(Int.MAX_VALUE, state.prestigeCrowns)
         assertEquals(Int.MAX_VALUE, result.totalCrowns)
+    }
+
+    @Test
+    fun prestigeAtCrownCapIsUnavailableAndDoesNotResetRun() {
+        val state = GameState()
+        val first = state.businesses.first()
+        val cashBefore = 9_999_999.0
+        val runEarnings = PrestigeRules.BASE_REQUIREMENT * 100.0
+        state.restoreEconomy(
+            cash = cashBefore,
+            gems = state.gems,
+            levels = mapOf(first.id to 100),
+            prestigeCrowns = Int.MAX_VALUE,
+            runEarnings = runEarnings,
+        )
+
+        val quote = state.prestigeQuote()
+        assertFalse(quote.available)
+        assertEquals(0, quote.crownReward)
+
+        val result = state.prestige()
+        assertFalse(result.prestiged)
+        assertEquals(Int.MAX_VALUE, state.prestigeCrowns)
+        assertEquals(100, state.businesses.first().level)
+        assertEquals(cashBefore, state.cash, 0.0)
+        assertEquals(runEarnings, state.runEarnings, 0.0)
     }
 
     @Test
