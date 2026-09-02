@@ -22,29 +22,31 @@ data class UiTouchMap(
 
 object UiTouchTargetResolver {
     fun resolve(x: Float, y: Float, map: UiTouchMap): UiTouchTarget? {
-        if (map.prestige.contains(x, y)) return UiTouchTarget.Prestige
+        if (map.prestige.containsLikeRectF(x, y)) return UiTouchTarget.Prestige
 
-        map.missions.firstOrNull { (_, bounds) -> bounds.contains(x, y) }
+        map.missions.firstOrNull { (_, bounds) -> bounds.containsLikeRectF(x, y) }
             ?.let { (id, _) -> return UiTouchTarget.Mission(id) }
 
-        map.buyModes.firstOrNull { (_, bounds) -> bounds.contains(x, y) }
+        map.buyModes.firstOrNull { (_, bounds) -> bounds.containsLikeRectF(x, y) }
             ?.let { (mode, _) -> return UiTouchTarget.BuyModeTarget(mode) }
 
-        map.permanentUpgrades.firstOrNull { (_, bounds) -> bounds.contains(x, y) }
+        map.permanentUpgrades.firstOrNull { (_, bounds) -> bounds.containsLikeRectF(x, y) }
             ?.let { (id, _) -> return UiTouchTarget.PermanentUpgrade(id) }
 
-        map.managers.firstOrNull { (_, bounds) -> bounds.contains(x, y) }
+        map.managers.firstOrNull { (_, bounds) -> bounds.containsLikeRectF(x, y) }
             ?.let { (id, _) -> return UiTouchTarget.Manager(id) }
 
-        val businessIndex = map.businessUpgrades.indexOfFirst { it.contains(x, y) }
+        val businessIndex = map.businessUpgrades.indexOfFirst { it.containsLikeRectF(x, y) }
         if (businessIndex >= 0) return UiTouchTarget.BusinessUpgrade(businessIndex)
 
         return null
     }
 
-    private fun UiBounds.contains(x: Float, y: Float): Boolean =
-        x >= minOf(left, right) &&
-            x <= maxOf(left, right) &&
-            y >= minOf(top, bottom) &&
-            y <= maxOf(top, bottom)
+    private fun UiBounds.containsLikeRectF(x: Float, y: Float): Boolean =
+        left < right &&
+            top < bottom &&
+            x >= left &&
+            x < right &&
+            y >= top &&
+            y < bottom
 }
