@@ -17,6 +17,12 @@ class UiInteractionController(private val gameState: GameState) {
     fun prestige(): UiInteractionResult {
         val quote = gameState.prestigeQuote()
         if (!quote.available) {
+            if (quote.currentCrowns == Int.MAX_VALUE) {
+                return UiInteractionResult(
+                    message = "PRESTIGE CROWN CAP REACHED",
+                    durationNanos = DURATION_INFO,
+                )
+            }
             return UiInteractionResult(
                 message = "PRESTIGE AT $${UiNumberFormatter.compact(quote.requirement)} RUN EARNINGS • NOW ${UiNumberFormatter.compact(gameState.runEarnings)}",
                 durationNanos = DURATION_PROGRESS,
