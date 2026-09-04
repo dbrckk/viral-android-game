@@ -23,7 +23,7 @@ object RasterAssetLoader {
         cache[assetPath]?.let { return it }
         if (assetPath in failedPaths) return null
 
-        val bitmap = runCatching {
+        val bitmap = try {
             if (assetPath.endsWith(".b64", ignoreCase = true)) {
                 val encoded = context.assets.open(assetPath)
                     .bufferedReader()
@@ -33,7 +33,9 @@ object RasterAssetLoader {
             } else {
                 context.assets.open(assetPath).use(BitmapFactory::decodeStream)
             }
-        }.getOrNull()
+        } catch (_: Exception) {
+            null
+        }
 
         if (bitmap != null) {
             cache.putIfAbsent(assetPath, bitmap)
