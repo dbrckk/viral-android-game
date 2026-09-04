@@ -57,6 +57,22 @@ class GameSaveRestorerTest {
     }
 
     @Test
+    fun saturatedFiniteEconomyValuesRemainValid() {
+        val result = GameSaveRestorer.restore(
+            snapshot(
+                cash = Double.MAX_VALUE,
+                runEarnings = Double.MAX_VALUE,
+                prestigeCrowns = Int.MAX_VALUE,
+            ),
+            nowEpochMillis = 0L,
+        )!!
+
+        assertEquals(Double.MAX_VALUE, result.state.cash, 0.0)
+        assertEquals(Double.MAX_VALUE, result.state.runEarnings, 0.0)
+        assertEquals(Int.MAX_VALUE, result.state.prestigeCrowns)
+    }
+
+    @Test
     fun invalidBusinessLevelsAreClampedToPlayableMinimum() {
         val result = GameSaveRestorer.restore(
             snapshot(levels = mapOf("street_stand" to Int.MIN_VALUE, "corner_shop" to 0)),
