@@ -22,9 +22,15 @@ object MissionCatalog {
     val all = listOf(
         MissionDefinition("first_25_levels","First Expansion","Reach 25 total business levels",MissionMetric.TOTAL_LEVELS,25.0,reward=MissionReward(MissionRewardType.CASH,2_500.0),icon="stack_up"),
         MissionDefinition("street_lv100","Street Empire","Reach Street Stand Lv.100",MissionMetric.BUSINESS_LEVEL,100.0,"street_stand",MissionReward(MissionRewardType.GEMS,5.0),"street_badge"),
-        MissionDefinition("income_10k","Five Figures","Reach $10K income per second",MissionMetric.INCOME_PER_SECOND,10_000.0,reward=MissionReward(MissionRewardType.CASH,100_000.0),icon="income_wave"),
         MissionDefinition("hire_two","Build a Team","Hire 2 managers",MissionMetric.MANAGERS_HIRED,2.0,reward=MissionReward(MissionRewardType.GEMS,8.0),icon="team"),
+        MissionDefinition("total_levels_250","Growing Network","Reach 250 total business levels",MissionMetric.TOTAL_LEVELS,250.0,reward=MissionReward(MissionRewardType.CASH,250_000.0),icon="stack_up"),
+        MissionDefinition("income_10k","Five Figures","Reach $10K income per second",MissionMetric.INCOME_PER_SECOND,10_000.0,reward=MissionReward(MissionRewardType.CASH,100_000.0),icon="income_wave"),
+        MissionDefinition("corner_lv250","Prime Location","Reach Corner Shop Lv.250",MissionMetric.BUSINESS_LEVEL,250.0,"corner_shop",MissionReward(MissionRewardType.GEMS,12.0),"street_badge"),
         MissionDefinition("buy_four_upgrades","Systems Online","Buy 4 permanent upgrades",MissionMetric.UPGRADES_PURCHASED,4.0,reward=MissionReward(MissionRewardType.CASH,1_000_000.0),icon="chip_star"),
+        MissionDefinition("hire_four","Executive Team","Hire all 4 managers",MissionMetric.MANAGERS_HIRED,4.0,reward=MissionReward(MissionRewardType.GEMS,20.0),icon="team"),
+        MissionDefinition("workshop_lv250","Production Line","Reach Workshop Lv.250",MissionMetric.BUSINESS_LEVEL,250.0,"workshop",MissionReward(MissionRewardType.CASH,5_000_000.0),"factory_crown"),
+        MissionDefinition("income_1m","Million a Second","Reach $1M income per second",MissionMetric.INCOME_PER_SECOND,1_000_000.0,reward=MissionReward(MissionRewardType.CASH,10_000_000.0),icon="income_wave"),
+        MissionDefinition("buy_eight_upgrades","Full Automation","Buy all 8 permanent upgrades",MissionMetric.UPGRADES_PURCHASED,8.0,reward=MissionReward(MissionRewardType.CASH,25_000_000.0),icon="chip_star"),
         MissionDefinition("factory_lv500","Industrial Titan","Reach Factory Lv.500",MissionMetric.BUSINESS_LEVEL,500.0,"factory",MissionReward(MissionRewardType.GEMS,25.0),"factory_crown")
     )
 }
