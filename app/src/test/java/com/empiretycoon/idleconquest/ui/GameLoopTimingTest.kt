@@ -7,6 +7,13 @@ import org.junit.Test
 
 class GameLoopTimingTest {
     @Test
+    fun redrawCadenceSlowsOnlyInPowerSaveMode() {
+        assertEquals(GameLoopTiming.REDRAW_DELAY_MILLIS, GameLoopTiming.redrawDelayMillis(false))
+        assertEquals(GameLoopTiming.POWER_SAVE_REDRAW_DELAY_MILLIS, GameLoopTiming.redrawDelayMillis(true))
+        assertTrue(GameLoopTiming.POWER_SAVE_REDRAW_DELAY_MILLIS > GameLoopTiming.REDRAW_DELAY_MILLIS)
+    }
+
+    @Test
     fun firstFrameAndNonMonotonicTimeProduceZeroDelta() {
         assertEquals(0.0, GameLoopTiming.frameDeltaSeconds(1_000L, 0L), 0.0)
         assertEquals(0.0, GameLoopTiming.frameDeltaSeconds(1_000L, 1_000L), 0.0)
