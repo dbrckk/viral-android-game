@@ -26,8 +26,30 @@ class MissionSystemTest {
         assertFalse(state.claimMission("first_25_levels").claimed)
     }
 
-    @Test fun catalogHasSixUniqueMissions() {
-        assertEquals(6, MissionCatalog.all.size)
-        assertEquals(6, MissionCatalog.all.map { it.id }.toSet().size)
+    @Test fun catalogHasTwelveUniqueMissions() {
+        assertEquals(12, MissionCatalog.all.size)
+        assertEquals(12, MissionCatalog.all.map { it.id }.toSet().size)
+    }
+
+    @Test fun expandedMissionMetricsReachExpectedTargets() {
+        val state = GameState()
+        state.restoreEconomy(
+            cash = 1_000_000_000.0,
+            gems = 0,
+            levels = mapOf(
+                "street_stand" to 100,
+                "corner_shop" to 250,
+                "workshop" to 250,
+                "factory" to 500,
+            ),
+            hiredManagers = ManagerCatalog.all.map { it.id }.toSet(),
+            permanentUpgrades = PermanentUpgradeCatalog.all.map { it.id }.toSet(),
+        )
+
+        assertTrue(state.missions.first { it.definition.id == "corner_lv250" }.completed)
+        assertTrue(state.missions.first { it.definition.id == "workshop_lv250" }.completed)
+        assertTrue(state.missions.first { it.definition.id == "hire_four" }.completed)
+        assertTrue(state.missions.first { it.definition.id == "buy_eight_upgrades" }.completed)
+        assertTrue(state.missions.first { it.definition.id == "factory_lv500" }.completed)
     }
 }
