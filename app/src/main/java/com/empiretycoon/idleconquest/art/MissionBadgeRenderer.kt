@@ -16,24 +16,24 @@ class MissionBadgeRenderer(context: Context) {
         6,
     )
 
-    private val missionRows = mapOf(
-        "first_25_levels" to 0,
-        "street_lv100" to 1,
-        "income_10k" to 2,
-        "hire_two" to 3,
-        "buy_four_upgrades" to 4,
-        "factory_lv500" to 5
+    private val iconRows = mapOf(
+        "stack_up" to 0,
+        "street_badge" to 1,
+        "income_wave" to 2,
+        "team" to 3,
+        "chip_star" to 4,
+        "factory_crown" to 5,
     )
 
     private val stateColumns = mapOf(
         "locked" to 0,
         "active" to 1,
         "complete" to 2,
-        "claimed" to 3
+        "claimed" to 3,
     )
 
     fun draw(c: Canvas, r: RectF, m: MissionDefinition, state: String) {
-        val row = missionRows[m.id] ?: return
+        val row = iconRows[m.icon] ?: return
         val col = stateColumns[state] ?: return
         if (!atlas.drawCell(c, r, col, row)) return
 
