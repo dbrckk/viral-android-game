@@ -32,4 +32,9 @@ class MainActivity : Activity() {
             RasterAssetLoader.clearMemoryCache()
         }
     }
+
+    override fun onLowMemory() {
+        RasterAssetLoader.clearMemoryCache()
+        super.onLowMemory()
+    }
 }
