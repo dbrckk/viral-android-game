@@ -1,7 +1,6 @@
 package com.empiretycoon.idleconquest
 
 import android.app.Activity
-import android.content.ComponentCallbacks2
 import android.os.Bundle
 import com.empiretycoon.idleconquest.art.RasterAssetLoader
 import com.empiretycoon.idleconquest.ui.BusinessShowcaseView
@@ -29,10 +28,7 @@ class MainActivity : Activity() {
 
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
-        val runningPressure = level in
-            ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW..ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL
-        val backgroundPressure = level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND
-        if (runningPressure || backgroundPressure) {
+        if (MemoryPressurePolicy.shouldClearRasterCache(level)) {
             RasterAssetLoader.clearMemoryCache()
         }
     }
