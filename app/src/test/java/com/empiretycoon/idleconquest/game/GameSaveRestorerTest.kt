@@ -44,6 +44,19 @@ class GameSaveRestorerTest {
     }
 
     @Test
+    fun expandedMissionClaimsRemainRestorable() {
+        val result = GameSaveRestorer.restore(
+            snapshot(claimedMissions = setOf("corner_lv250", "hire_four", "buy_eight_upgrades")),
+            nowEpochMillis = 0L,
+        )!!
+
+        assertEquals(
+            setOf("corner_lv250", "hire_four", "buy_eight_upgrades"),
+            result.state.claimedMissions(),
+        )
+    }
+
+    @Test
     fun invalidNumericValuesFallBackSafely() {
         val result = GameSaveRestorer.restore(
             snapshot(cash = Double.NaN, gems = -10, prestigeCrowns = -4, runEarnings = Double.POSITIVE_INFINITY),
