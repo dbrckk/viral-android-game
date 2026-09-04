@@ -29,7 +29,10 @@ class MainActivity : Activity() {
 
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
-        if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
+        val runningPressure = level in
+            ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW..ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL
+        val backgroundPressure = level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND
+        if (runningPressure || backgroundPressure) {
             RasterAssetLoader.clearMemoryCache()
         }
     }
