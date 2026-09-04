@@ -73,6 +73,22 @@ jobs:
       - name: Build release App Bundle
         run: gradle :app:bundleRelease --stacktrace
 
+      - name: Enforce release size budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk=$(find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' -print -quit)
+          aab=$(find app/build/outputs/bundle/release -maxdepth 1 -type f -name '*.aab' -print -quit)
+          budget=$((1024 * 1024))
+          for artifact in "$apk" "$aab"; do
+            size=$(stat -c%s "$artifact")
+            echo "$(basename "$artifact"): $size bytes (budget: $budget)"
+            if (( size > budget )); then
+              echo "Release artifact exceeds 1 MiB budget: $artifact" >&2
+              exit 1
+            fi
+          done
+
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
