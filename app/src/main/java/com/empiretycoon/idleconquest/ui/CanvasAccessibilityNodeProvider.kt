@@ -1,9 +1,12 @@
 package com.empiretycoon.idleconquest.ui
 
+import android.content.Context
 import android.graphics.Rect
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.View
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityManager
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityNodeProvider
 import kotlin.math.ceil
@@ -14,9 +17,13 @@ class CanvasAccessibilityNodeProvider(
     private val nodesProvider: () -> List<UiAccessibilityNode>,
     private val clickTarget: (UiTouchTarget) -> Boolean,
 ) : AccessibilityNodeProvider() {
+    private val accessibilityManager =
+        host.context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+    private var accessibilityFocusedId: Int? = null
+    private var hoveredId: Int? = null
 
     override fun createAccessibilityNodeInfo(virtualViewId: Int): AccessibilityNodeInfo? {
-        val nodes = nodesProvider()
+        val nodes = currentNodes()
         if (virtualViewId == HOST_VIEW_ID) {
             return AccessibilityNodeInfo.obtain(host).apply {
                 host.onInitializeAccessibilityNodeInfo(this)
@@ -38,6 +45,7 @@ class CanvasAccessibilityNodeProvider(
             isClickable = true
             isFocusable = true
             isVisibleToUser = host.visibility == View.VISIBLE && host.alpha > 0f
+            isAccessibilityFocused = accessibilityFocusedId == node.virtualId
             setBoundsInParent(node.bounds.toRect())
 
             val location = IntArray(2)
@@ -52,6 +60,11 @@ class CanvasAccessibilityNodeProvider(
                 )
             )
             addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK)
+            if (isAccessibilityFocused) {
+                addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLEAR_ACCESSIBILITY_FOCUS)
+            } else {
+                addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_ACCESSIBILITY_FOCUS)
+            }
         }
     }
 
@@ -59,14 +72,26 @@ class CanvasAccessibilityNodeProvider(
         if (virtualViewId == HOST_VIEW_ID) {
             return host.performAccessibilityAction(action, arguments)
         }
-        if (action != AccessibilityNodeInfo.ACTION_CLICK) return false
 
-        val node = nodesProvider().firstOrNull { it.virtualId == virtualViewId } ?: return false
-        if (!clickTarget(node.target)) return false
+        val node = currentNodes().firstOrNull { it.virtualId == virtualViewId } ?: return false
+        return when (action) {
+            AccessibilityNodeInfo.ACTION_CLICK -> {
+                if (!clickTarget(node.target)) return false
+                sendVirtualEvent(node, AccessibilityEvent.TYPE_VIEW_CLICKED)
+                host.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)
+                true
+            }
 
-        sendVirtualEvent(node, AccessibilityEvent.TYPE_VIEW_CLICKED)
-        host.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)
-        return true
+            AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS -> requestAccessibilityFocus(node)
+            AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS -> clearAccessibilityFocus(node)
+            else -> false
+        }
+    }
+
+    override fun findFocus(focus: Int): AccessibilityNodeInfo? {
+        if (focus != AccessibilityNodeInfo.FOCUS_ACCESSIBILITY) return null
+        val focusedId = accessibilityFocusedId ?: return null
+        return createAccessibilityNodeInfo(focusedId)
     }
 
     override fun findAccessibilityNodeInfosByText(
@@ -74,11 +99,75 @@ class CanvasAccessibilityNodeProvider(
         virtualViewId: Int,
     ): List<AccessibilityNodeInfo> {
         val query = searched?.trim()?.takeIf { it.isNotEmpty() } ?: return emptyList()
-        return nodesProvider()
+        return currentNodes()
             .asSequence()
             .filter { it.label.contains(query, ignoreCase = true) }
             .mapNotNull { createAccessibilityNodeInfo(it.virtualId) }
             .toList()
+    }
+
+    fun dispatchHoverEvent(event: MotionEvent): Boolean {
+        if (accessibilityManager?.isTouchExplorationEnabled != true) return false
+        return when (event.actionMasked) {
+            MotionEvent.ACTION_HOVER_ENTER,
+            MotionEvent.ACTION_HOVER_MOVE -> {
+                val node = currentNodes().firstOrNull { it.bounds.contains(event.x, event.y) }
+                updateHoveredNode(node)
+                node != null
+            }
+
+            MotionEvent.ACTION_HOVER_EXIT -> {
+                val handled = hoveredId != null
+                updateHoveredNode(null)
+                handled
+            }
+
+            else -> false
+        }
+    }
+
+    private fun requestAccessibilityFocus(node: UiAccessibilityNode): Boolean {
+        if (accessibilityManager?.isEnabled != true) return false
+        if (accessibilityFocusedId == node.virtualId) return false
+
+        accessibilityFocusedId?.let { oldId ->
+            currentNodes().firstOrNull { it.virtualId == oldId }
+                ?.let { sendVirtualEvent(it, AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED) }
+        }
+        accessibilityFocusedId = node.virtualId
+        sendVirtualEvent(node, AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED)
+        host.invalidate()
+        return true
+    }
+
+    private fun clearAccessibilityFocus(node: UiAccessibilityNode): Boolean {
+        if (accessibilityFocusedId != node.virtualId) return false
+        accessibilityFocusedId = null
+        sendVirtualEvent(node, AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED)
+        host.invalidate()
+        return true
+    }
+
+    private fun updateHoveredNode(node: UiAccessibilityNode?) {
+        if (hoveredId == node?.virtualId) return
+        val nodes = currentNodes()
+        hoveredId?.let { oldId ->
+            nodes.firstOrNull { it.virtualId == oldId }
+                ?.let { sendVirtualEvent(it, AccessibilityEvent.TYPE_VIEW_HOVER_EXIT) }
+        }
+        hoveredId = node?.virtualId
+        node?.let { sendVirtualEvent(it, AccessibilityEvent.TYPE_VIEW_HOVER_ENTER) }
+    }
+
+    private fun currentNodes(): List<UiAccessibilityNode> {
+        val nodes = nodesProvider()
+        if (accessibilityFocusedId != null && nodes.none { it.virtualId == accessibilityFocusedId }) {
+            accessibilityFocusedId = null
+        }
+        if (hoveredId != null && nodes.none { it.virtualId == hoveredId }) {
+            hoveredId = null
+        }
+        return nodes
     }
 
     private fun sendVirtualEvent(node: UiAccessibilityNode, eventType: Int) {
@@ -92,6 +181,9 @@ class CanvasAccessibilityNodeProvider(
         }
         parent.requestSendAccessibilityEvent(host, event)
     }
+
+    private fun UiBounds.contains(x: Float, y: Float): Boolean =
+        left < right && top < bottom && x >= left && x < right && y >= top && y < bottom
 
     private fun UiBounds.toRect(): Rect = Rect(
         floor(left).toInt(),
