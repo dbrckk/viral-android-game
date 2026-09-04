@@ -6,6 +6,14 @@ import org.junit.Test
 
 class CatalogIntegrityTest {
     private val businessIds = GameState().businesses.map { it.id }.toSet()
+    private val missionBadgeStyles = setOf(
+        "stack_up",
+        "street_badge",
+        "income_wave",
+        "team",
+        "chip_star",
+        "factory_crown",
+    )
 
     @Test
     fun catalogIdsAreUnique() {
@@ -31,10 +39,11 @@ class CatalogIntegrityTest {
     }
 
     @Test
-    fun missionsHaveValidTargetsRewardsAndBusinessReferences() {
+    fun missionsHaveValidTargetsRewardsBusinessReferencesAndBadgeStyles() {
         MissionCatalog.all.forEach { mission ->
             assertTrue(mission.target.isFinite() && mission.target > 0.0)
             assertTrue(mission.reward.amount.isFinite() && mission.reward.amount > 0.0)
+            assertTrue(mission.icon in missionBadgeStyles)
             if (mission.metric == MissionMetric.BUSINESS_LEVEL) {
                 assertTrue(mission.businessId in businessIds)
             } else {
